@@ -36,5 +36,6 @@ Release 检查：
 - 源码：<https://github.com/Mapher_df/maple-nilset>
 - 许可证：GPL-3.0-only
 - 版权：Copyright © 2026 Mapher_df
+- 图标来源：<https://yesicon.app/zh-Hans/ic?k=tv>
 
 完整许可证文本见 [LICENSE](LICENSE)。
