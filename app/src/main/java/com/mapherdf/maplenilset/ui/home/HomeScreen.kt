@@ -68,6 +68,7 @@ import com.mapherdf.maplenilset.R
 import com.mapherdf.maplenilset.ui.calendar.CalendarScreen
 import com.mapherdf.maplenilset.ui.bili.BiliNilScreen
 import com.mapherdf.maplenilset.ui.schedule.ScheduleScreen
+import com.mapherdf.maplenilset.ui.markdown.MarkdownText
 import com.mapherdf.maplenilset.ui.theme.themeContainerColor
 import com.mapherdf.maplenilset.ui.theme.themeDrawerMaskColor
 
@@ -248,20 +249,24 @@ private fun HomeTextContent(
             .fillMaxSize()
             .padding(horizontal = 20.dp, vertical = 12.dp),
     ) {
-        Text(
-            text = when (val state = textState) {
-                HomeTextUiState.Loading ->
-                    AnnotatedString(stringResource(R.string.home_text_loading))
-                is HomeTextUiState.Success -> parseInlineMarkdown(state.text)
-                HomeTextUiState.Error ->
-                    AnnotatedString(stringResource(R.string.home_text_load_failed))
-            },
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState()),
-        )
+        when (val state = textState) {
+            HomeTextUiState.Loading -> Text(
+                text = stringResource(R.string.home_text_loading),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            is HomeTextUiState.Success -> MarkdownText(
+                markdown = state.text,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
+            )
+            HomeTextUiState.Error -> Text(
+                text = stringResource(R.string.home_text_load_failed),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+        }
     }
 }
 
