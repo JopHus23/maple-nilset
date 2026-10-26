@@ -4,9 +4,11 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -29,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -205,11 +208,16 @@ private fun UpdateCard(
                 UpdateSupportingText(updateState, currentVersion, latestVersion)
             },
             leadingContent = {
-                Icon(
-                    painter = painterResource(R.drawable.ic_update),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.height(48.dp),
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_update),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             },
             colors = ListItemDefaults.colors(containerColor = Color.Transparent),
             modifier = Modifier.clickable {
@@ -233,25 +241,32 @@ private fun UpdateSupportingText(
     currentVersion: String,
     latestVersion: String?,
 ) {
-    val text = when {
-        updateState is UpdateState.Checking ->
-            buildAnnotatedString { append(stringResource(R.string.about_update_checking)) }
-        updateState is UpdateState.Error ->
-            buildAnnotatedString { append(stringResource(R.string.about_update_check_failed)) }
-        latestVersion != null -> {
-            buildAnnotatedString {
-                withStyle(SpanStyle(color = MaterialTheme.colorScheme.onSurfaceVariant)) {
-                    append(stringResource(R.string.about_update_current, currentVersion))
-                    append("  ")
-                }
-                withStyle(SpanStyle(color = MaterialTheme.colorScheme.onSurface)) {
-                    append(stringResource(R.string.about_update_latest, latestVersion))
-                }
-            }
+    when {
+        updateState is UpdateState.Checking -> Text(
+            text = stringResource(R.string.about_update_checking),
+            style = MaterialTheme.typography.bodySmall,
+        )
+        updateState is UpdateState.Error -> Text(
+            text = stringResource(R.string.about_update_check_failed),
+            style = MaterialTheme.typography.bodySmall,
+        )
+        latestVersion != null -> Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(
+                text = stringResource(R.string.about_update_current, currentVersion),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text = stringResource(R.string.about_update_latest, latestVersion),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
         }
-        else -> buildAnnotatedString { append(stringResource(R.string.about_update_checking)) }
+        else -> Text(
+            text = stringResource(R.string.about_update_checking),
+            style = MaterialTheme.typography.bodySmall,
+        )
     }
-    Text(text = text, style = MaterialTheme.typography.bodySmall)
 }
 
 @Composable
