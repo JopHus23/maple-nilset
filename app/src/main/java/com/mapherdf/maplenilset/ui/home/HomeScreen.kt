@@ -51,6 +51,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -243,10 +249,12 @@ private fun HomeTextContent(
             .padding(horizontal = 20.dp, vertical = 12.dp),
     ) {
         Text(
-            text = when (textState) {
-                HomeTextUiState.Loading -> stringResource(R.string.home_text_loading)
-                is HomeTextUiState.Success -> (textState as HomeTextUiState.Success).text
-                HomeTextUiState.Error -> stringResource(R.string.home_text_load_failed)
+            text = when (val state = textState) {
+                HomeTextUiState.Loading ->
+                    AnnotatedString(stringResource(R.string.home_text_loading))
+                is HomeTextUiState.Success -> parseInlineMarkdown(state.text)
+                HomeTextUiState.Error ->
+                    AnnotatedString(stringResource(R.string.home_text_load_failed))
             },
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface,
@@ -254,6 +262,42 @@ private fun HomeTextContent(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState()),
         )
+    }
+}
+
+private fun parseInlineMarkdown(text: String): AnnotatedString = buildAnnotatedString {
+    var index = 0
+    while (index < text.length) {
+        when {
+            text.startsWith("**", index) -> {
+                val end = text.indexOf("**", index + 2)
+                if (end != -1) {
+                    withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append(text.substring(index + 2, end))
+                    }
+                    index = end + 2
+                } else {
+                    append(text[index])
+                    index++
+                }
+            }
+            text[index] == '_' && (index == 0 || text[index - 1].isWhitespace()) -> {
+                val end = text.indexOf('_', index + 1)
+                if (end != -1) {
+                    withStyle(SpanStyle(fontStyle = FontStyle.Italic)) {
+                        append(text.substring(index + 1, end))
+                    }
+                    index = end + 1
+                } else {
+                    append(text[index])
+                    index++
+                }
+            }
+            else -> {
+                append(text[index])
+                index++
+            }
+        }
     }
 }
 
