@@ -22,6 +22,7 @@ data class GitHubReleaseAsset(
 
 @Serializable
 data class GitHubRelease(
+    @SerialName("tag_name")
     val tagName: String,
     val assets: List<GitHubReleaseAsset> = emptyList(),
 )
