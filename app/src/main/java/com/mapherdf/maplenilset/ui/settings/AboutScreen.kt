@@ -31,6 +31,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -56,6 +57,7 @@ fun AboutScreen(
 ) {
     val updateState by updateViewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val sourceUrl = stringResource(R.string.about_source_url)
 
     LaunchedEffect(Unit) {
         updateViewModel.checkForUpdate()
@@ -115,9 +117,7 @@ fun AboutScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.clickable {
-                        context.startActivity(
-                            Intent(Intent.ACTION_VIEW, Uri.parse(context.getString(R.string.about_source_url))),
-                        )
+                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(sourceUrl)))
                     },
                 )
                 Text(
