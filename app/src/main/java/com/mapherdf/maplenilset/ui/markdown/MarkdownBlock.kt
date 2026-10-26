@@ -86,9 +86,10 @@ internal fun InlineText(
     onLinkClick: ((String) -> Unit)?,
     onTagClick: ((String) -> Unit)?,
 ) {
-    val annotated = rememberInlineAnnotated(node, onLinkClick, onTagClick)
+    val result = rememberInlineAnnotated(node, onLinkClick, onTagClick)
     Text(
-        text = annotated,
+        text = result.annotatedString,
+        inlineContent = result.inlineContents,
         style = MaterialTheme.typography.bodyMedium,
         modifier = Modifier.padding(vertical = 4.dp),
     )
