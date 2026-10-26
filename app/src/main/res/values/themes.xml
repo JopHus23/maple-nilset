@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.ATOM" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="android:fontFamily">@font/jetbrains_maple_mono_medium</item>
+        <item name="fontFamily">@font/jetbrains_maple_mono_medium</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>
