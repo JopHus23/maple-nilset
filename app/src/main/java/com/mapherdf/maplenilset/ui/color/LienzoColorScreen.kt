@@ -122,7 +122,7 @@ fun LienzoColorScreen(
                     .fillMaxSize()
                     .padding(innerPadding)
                     .padding(horizontal = 12.dp),
-                contentPadding = PaddingValues(bottom = 12.dp),
+                contentPadding = PaddingValues(top = 8.dp, bottom = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 item(key = "color_list_hint") {
