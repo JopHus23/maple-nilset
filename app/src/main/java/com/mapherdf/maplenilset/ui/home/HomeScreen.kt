@@ -68,6 +68,8 @@ import com.mapherdf.maplenilset.R
 import com.mapherdf.maplenilset.ui.calendar.CalendarScreen
 import com.mapherdf.maplenilset.ui.bili.BiliNilScreen
 import com.mapherdf.maplenilset.ui.schedule.ScheduleScreen
+import com.mapherdf.maplenilset.ui.color.LienzoColorScreen
+import com.mapherdf.maplenilset.ui.color.ColorAddScreen
 import com.mapherdf.maplenilset.ui.markdown.MarkdownText
 import com.mapherdf.maplenilset.ui.theme.themeContainerColor
 import com.mapherdf.maplenilset.ui.theme.themeDrawerMaskColor
@@ -81,6 +83,7 @@ fun HomeScreen(
     val drawerScope = rememberCoroutineScope()
     var drawerAnimationJob by remember { mutableStateOf<Job?>(null) }
     var selectedDestination by rememberSaveable { mutableIntStateOf(0) }
+    var colorSubPage by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(isVisible) {
         if (!isVisible) {
@@ -108,6 +111,7 @@ fun HomeScreen(
         stringResource(R.string.drawer_todo),
         stringResource(R.string.drawer_schedule),
         stringResource(R.string.drawer_bili_nil),
+        stringResource(R.string.drawer_lienzo_color),
     )
     val destinationDetails = listOf(
         stringResource(R.string.home_empty),
@@ -170,7 +174,9 @@ fun HomeScreen(
                                         2 -> DrawerIcon(R.drawable.ic_note, index == selectedDestination)
                                         3 -> DrawerIcon(R.drawable.ic_todo, index == selectedDestination)
                                         4 -> DrawerIcon(R.drawable.ic_schedule, index == selectedDestination)
-                                        else -> DrawerIcon(R.drawable.ic_bilibili, index == selectedDestination, useBrandColor = true)
+                                        5 -> DrawerIcon(R.drawable.ic_bilibili, index == selectedDestination, useBrandColor = true)
+                                        6 -> DrawerIcon(R.drawable.ic_color, index == selectedDestination)
+                                        else -> DrawerIcon(R.drawable.ic_home, index == selectedDestination)
                                     }
                                 },
                                 onClick = {
@@ -224,6 +230,13 @@ fun HomeScreen(
                 ScheduleScreen()
             } else if (selectedDestination == 5) {
                 BiliNilScreen()
+            } else if (selectedDestination == 6) {
+                LienzoColorScreen(
+                    onAddColor = { colorSubPage = "add" },
+                    onEditColor = { id -> colorSubPage = "edit_$id" },
+                    onViewColor = { id -> colorSubPage = "view_$id" },
+                    onRemoveColor = { },
+                )
             } else if (selectedDestination == 0) {
                 HomeTextContent()
             } else {
