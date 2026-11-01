@@ -234,7 +234,7 @@ class MainActivity : ComponentActivity() {
                                 ColorDetailScreen(
                                     colorId = colorId,
                                     onNavigateBack = {
-                                        navController.popBackStackIfCurrent(AppRoutes.colorDetail(colorId))
+                                        navController.popBackStackIfCurrent(AppRoutes.COLOR_DETAIL)
                                     },
                                     onEditColor = { id ->
                                         navController.navigate(AppRoutes.colorEdit(id))

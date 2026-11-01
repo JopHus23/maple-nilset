@@ -19,6 +19,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 enum class ColorFormat(val label: String) {
@@ -47,6 +48,9 @@ class ColorViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5_000),
             initialValue = emptyList(),
         )
+
+    private val _isSavingColor = MutableStateFlow(false)
+    val isSavingColor: StateFlow<Boolean> = _isSavingColor
 
     fun parseColor(format: ColorFormat, input: String): ColorParseResult? {
         val rgb = when (format) {
@@ -121,6 +125,8 @@ class ColorViewModel @Inject constructor(
         inputValue: String,
         onSaved: () -> Unit,
     ) {
+        if (_isSavingColor.value) return
+        _isSavingColor.value = true
         viewModelScope.launch {
             val hex = ColorConverter.rgbToHex(rgb)
             val resolvedName = name.trim().ifEmpty {
@@ -140,6 +146,7 @@ class ColorViewModel @Inject constructor(
                 colorRepository.addColor(color)
             }
             onSaved()
+            _isSavingColor.value = false
         }
     }
 

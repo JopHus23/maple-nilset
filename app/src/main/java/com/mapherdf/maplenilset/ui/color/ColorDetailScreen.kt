@@ -37,10 +37,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.layout.size
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -52,6 +56,35 @@ import com.mapherdf.maplenilset.data.color.SavedColor
 import com.mapherdf.maplenilset.ui.theme.themeContainerBorderColor
 import com.mapherdf.maplenilset.ui.theme.themeContainerColor
 
+private val CieSpectralLocus = listOf(
+    0.1741 to 0.0050,
+    0.1733 to 0.0038,
+    0.1596 to 0.0044,
+    0.1443 to 0.0071,
+    0.1320 to 0.0102,
+    0.1272 to 0.0124,
+    0.1440 to 0.0292,
+    0.1241 to 0.0711,
+    0.0913 to 0.1327,
+    0.0454 to 0.2950,
+    0.0082 to 0.5384,
+    0.0131 to 0.6653,
+    0.0743 to 0.8338,
+    0.1547 to 0.8059,
+    0.2143 to 0.7502,
+    0.3016 to 0.6923,
+    0.3731 to 0.6245,
+    0.4441 to 0.5547,
+    0.5125 to 0.4866,
+    0.5752 to 0.4207,
+    0.6270 to 0.3725,
+    0.6658 to 0.3340,
+    0.6915 to 0.3083,
+    0.7079 to 0.2920,
+    0.7190 to 0.2811,
+    0.7347 to 0.2653,
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ColorDetailScreen(
@@ -62,6 +95,7 @@ fun ColorDetailScreen(
 ) {
     val savedColors by viewModel.savedColors.collectAsStateWithLifecycle()
     val savedColor = savedColors.find { it.id == colorId }
+    val clipboard = LocalClipboardManager.current
     var showDeleteDialog by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -125,7 +159,9 @@ fun ColorDetailScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 ColorHeader(savedColor, rgb, colorName)
-                ColorFormatCards(rgb)
+                ColorFormatCards(rgb) { value ->
+                    clipboard.setText(AnnotatedString(value))
+                }
                 CiePositionCard(rgb)
                 PerceptualPropertiesCard(rgb)
             }
@@ -204,7 +240,10 @@ private fun ColorHeader(
 }
 
 @Composable
-private fun ColorFormatCards(rgb: RgbColor) {
+private fun ColorFormatCards(
+    rgb: RgbColor,
+    onCopyValue: (String) -> Unit,
+) {
     val formats = listOf(
         ColorFormat.HEX,
         ColorFormat.RGB,
@@ -220,6 +259,7 @@ private fun ColorFormatCards(rgb: RgbColor) {
                 title = format.label,
                 description = formatDescription(format),
                 value = formatValue(format, rgb),
+                onCopy = { onCopyValue(formatValue(format, rgb)) },
             )
         }
         val lch = ColorConverter.rgbToLch(rgb)
@@ -227,12 +267,14 @@ private fun ColorFormatCards(rgb: RgbColor) {
             title = "LCh",
             description = "CIE LCh：由 LAB 的 a*、b* 换算出的彩度与色相角。",
             value = "LCh(${formatValue(lch.l)}, ${formatValue(lch.c)}, ${formatValue(lch.h)})",
+            onCopy = { onCopyValue("LCh(${formatValue(lch.l)}, ${formatValue(lch.c)}, ${formatValue(lch.h)})") },
         )
         val cie = ColorConverter.rgbToCieXy(rgb)
         InfoCard(
             title = "CIE-xy",
             description = "CIE 1931 色度坐标，表示颜色在标准色度图中的位置。",
             value = "CIE-xy(${formatValue(cie.x, 4)}, ${formatValue(cie.y, 4)})",
+            onCopy = { onCopyValue("CIE-xy(${formatValue(cie.x, 4)}, ${formatValue(cie.y, 4)})") },
         )
     }
 }
@@ -242,6 +284,7 @@ private fun InfoCard(
     title: String,
     description: String,
     value: String,
+    onCopy: () -> Unit,
 ) {
     Surface(
         shape = RoundedCornerShape(8.dp),
@@ -260,10 +303,31 @@ private fun InfoCard(
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Medium,
             )
-            Text(
-                text = value,
-                style = MaterialTheme.typography.bodyMedium,
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.weight(1f),
+                )
+                Surface(
+                    onClick = onCopy,
+                    shape = RoundedCornerShape(8.dp),
+                    color = Color.Transparent,
+                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(30.dp),
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_copy),
+                            contentDescription = stringResource(R.string.lienzo_color_copied),
+                            modifier = Modifier.size(17.dp),
+                        )
+                    }
+                }
+            }
             Text(
                 text = description,
                 style = MaterialTheme.typography.bodySmall,
@@ -310,8 +374,17 @@ private fun CiePositionCard(rgb: RgbColor) {
                     lineTo(blue.x, blue.y)
                     close()
                 }
+                val spectralLocus = Path().apply {
+                    CieSpectralLocus.forEachIndexed { index, (xValue, yValue) ->
+                        val point = Offset(x(xValue), y(yValue))
+                        if (index == 0) moveTo(point.x, point.y) else lineTo(point.x, point.y)
+                    }
+                    close()
+                }
+                drawPath(spectralLocus, Color.White.copy(alpha = 0.08f))
+                drawPath(spectralLocus, Color.White.copy(alpha = 0.55f), style = Stroke(width = 2.dp.toPx()))
                 drawPath(triangle, Color.White.copy(alpha = 0.10f))
-                drawPath(triangle, Color.White.copy(alpha = 0.35f), style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx()))
+                drawPath(triangle, Color.White.copy(alpha = 0.35f), style = Stroke(width = 2.dp.toPx()))
                 val point = Offset(x(cie.x), y(cie.y))
                 drawCircle(Color(rgb.r, rgb.g, rgb.b), radius = 10.dp.toPx(), center = point)
                 drawCircle(Color.White, radius = 10.dp.toPx(), center = point, style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx()))

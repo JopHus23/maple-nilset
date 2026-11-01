@@ -65,6 +65,7 @@ fun ColorAddScreen(
         if (inputValue.isBlank()) null else viewModel.parseColor(selectedFormat, inputValue)
     }
     val savedColors by viewModel.savedColors.collectAsStateWithLifecycle()
+    val isSavingColor by viewModel.isSavingColor.collectAsStateWithLifecycle()
     val editingColor = editId?.let { id -> savedColors.find { it.id == id } }
     val rgb = parseResult?.rgb
     val nameEntry = rgb?.let { viewModel.colorName(it) }
@@ -72,10 +73,14 @@ fun ColorAddScreen(
     LaunchedEffect(editingColor) {
         val color = editingColor ?: return@LaunchedEffect
         if (didLoadEdit) return@LaunchedEffect
-        val sourceFormat = runCatching { ColorFormat.valueOf(color.sourceType) }.getOrDefault(ColorFormat.HEX)
+        val savedFormat = runCatching { ColorFormat.valueOf(color.sourceType) }.getOrDefault(ColorFormat.HEX)
+        val sourceFormat = if (savedFormat == ColorFormat.NCS) ColorFormat.HEX else savedFormat
         val sourceRgb = ColorConverter.hexToRgb(color.hex)
         selectedFormat = sourceFormat
-        inputValue = color.sourceValue ?: sourceRgb?.let { viewModel.formatForRgb(sourceFormat, it) }.orEmpty()
+        inputValue = when {
+            sourceFormat == ColorFormat.HEX -> sourceRgb?.let { ColorConverter.rgbToHex(it) }.orEmpty()
+            else -> color.sourceValue ?: sourceRgb?.let { viewModel.formatForRgb(sourceFormat, it) }.orEmpty()
+        }
         colorName = color.name
         didLoadEdit = true
     }
@@ -203,7 +208,7 @@ fun ColorAddScreen(
                         onSaved = onNavigateBack,
                     )
                 },
-                enabled = parseResult != null,
+                enabled = parseResult != null && !isSavingColor,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp),
             ) {
@@ -219,7 +224,7 @@ private fun ColorFormatTabs(
     onSelect: (ColorFormat) -> Unit,
 ) {
     val row1 = listOf(ColorFormat.HEX, ColorFormat.RGB, ColorFormat.CMYK)
-    val row2 = listOf(ColorFormat.HSL, ColorFormat.HSV_HSB, ColorFormat.NCS, ColorFormat.LAB)
+    val row2 = listOf(ColorFormat.HSL, ColorFormat.HSV_HSB, ColorFormat.LAB)
 
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
