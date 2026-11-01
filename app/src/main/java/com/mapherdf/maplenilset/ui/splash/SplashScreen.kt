@@ -48,11 +48,11 @@ fun SplashScreen(
             animationSpec = tween(durationMillis = 600, easing = CubicBezierEasing(0.0f, 0.6f, 0.2f, 1.0f)),
         )
         delay(600)
-        onFinished()
         exitProgress.animateTo(
             targetValue = 0f,
             animationSpec = tween(durationMillis = 500),
         )
+        onFinished()
     }
 
     Box(
@@ -61,7 +61,7 @@ fun SplashScreen(
     ) {
         Canvas(
             modifier = Modifier
-                .size(120.dp)
+                .fillMaxSize()
                 .graphicsLayer {
                     scaleX = exitProgress.value
                     scaleY = exitProgress.value
@@ -70,7 +70,7 @@ fun SplashScreen(
         ) {
             drawRect(color = backgroundColor)
             val strokeWidth = 9.dp.toPx()
-            val radius = (size.minDimension - strokeWidth) / 2f
+            val radius = 60.dp.toPx()
             val center = Offset(size.width / 2f, size.height / 2f)
 
             drawCircle(
