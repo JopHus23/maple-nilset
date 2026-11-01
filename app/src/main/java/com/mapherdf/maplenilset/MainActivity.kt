@@ -74,7 +74,7 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background,
                 ) {
                     val backgroundImage = rememberCustomBackgroundImage(themeSettings.backgroundImageUri)
-                    if (!isThemeReady || showSplash) {
+                    if (!isThemeReady) {
                         SplashScreen(onFinished = { showSplash = false })
                         return@Surface
                     }
@@ -226,6 +226,13 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         }
+                    }
+
+                    if (showSplash) {
+                        SplashScreen(
+                            onFinished = { showSplash = false },
+                            modifier = Modifier.fillMaxSize(),
+                        )
                     }
                 }
             }

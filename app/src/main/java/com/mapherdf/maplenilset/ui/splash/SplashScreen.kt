@@ -29,11 +29,13 @@ import kotlin.math.sin
 @Composable
 fun SplashScreen(
     onFinished: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val circleProgress = remember { Animatable(0f) }
     val slashProgress = remember { Animatable(0f) }
     val exitProgress = remember { Animatable(1f) }
     val color = MaterialTheme.colorScheme.primary
+    val backgroundColor = MaterialTheme.colorScheme.background
 
     LaunchedEffect(Unit) {
         delay(300)
@@ -54,7 +56,7 @@ fun SplashScreen(
     }
 
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center,
     ) {
         Canvas(
@@ -66,6 +68,7 @@ fun SplashScreen(
                     alpha = exitProgress.value
                 },
         ) {
+            drawRect(color = backgroundColor)
             val strokeWidth = 9.dp.toPx()
             val radius = (size.minDimension - strokeWidth) / 2f
             val center = Offset(size.width / 2f, size.height / 2f)
