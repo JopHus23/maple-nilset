@@ -46,11 +46,11 @@ fun SplashScreen(
             animationSpec = tween(durationMillis = 600, easing = CubicBezierEasing(0.0f, 0.6f, 0.2f, 1.0f)),
         )
         delay(600)
+        onFinished()
         exitProgress.animateTo(
             targetValue = 0f,
             animationSpec = tween(durationMillis = 500),
         )
-        onFinished()
     }
 
     Box(
