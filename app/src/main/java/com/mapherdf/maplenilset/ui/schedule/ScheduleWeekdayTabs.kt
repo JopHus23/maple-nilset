@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -60,6 +61,7 @@ fun ScheduleWeekdayTabs(
                 Box(
                     modifier = Modifier
                         .weight(1f)
+                        .aspectRatio(1f)
                         .clip(RoundedCornerShape(6.dp))
                         .then(
                             if (isToday) {
@@ -79,7 +81,7 @@ fun ScheduleWeekdayTabs(
                             },
                         )
                         .clickable { onSelect(weekday) }
-                        .padding(vertical = 10.dp),
+                        .padding(vertical = 8.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
