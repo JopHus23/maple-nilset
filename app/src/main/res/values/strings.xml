@@ -212,6 +212,9 @@
     <string name="schedule_optional">(可选)</string>
     <string name="schedule_course_edit">编辑课程</string>
     <string name="schedule_course_delete">删除当前课程</string>
+    <string name="schedule_course_delete_title">确认删除</string>
+    <string name="schedule_course_delete_message">确定要删除这门课程吗？</string>
+    <string name="schedule_course_delete_confirm">确认删除</string>
     <string name="schedule_save">保存</string>
     <string name="schedule_saving">保存中</string>
     <string name="schedule_cancel">取消</string>
