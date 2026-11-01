@@ -2,6 +2,7 @@ package com.mapherdf.maplenilset.ui.schedule
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -38,6 +39,7 @@ private val weekdayValues = listOf(1, 2, 3, 4, 5, 6, 0)
 @Composable
 fun ScheduleWeekdayTabs(
     selectedWeekday: Int,
+    todayWeekday: Int,
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -54,10 +56,21 @@ fun ScheduleWeekdayTabs(
             weekdayTitles.forEachIndexed { index, titleRes ->
                 val weekday = weekdayValues[index]
                 val isSelected = weekday == selectedWeekday
+                val isToday = weekday == todayWeekday
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .clip(RoundedCornerShape(6.dp))
+                        .then(
+                            if (isToday) {
+                                Modifier.border(
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+                                    shape = RoundedCornerShape(6.dp),
+                                )
+                            } else {
+                                Modifier
+                            },
+                        )
                         .background(
                             if (isSelected) {
                                 MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)

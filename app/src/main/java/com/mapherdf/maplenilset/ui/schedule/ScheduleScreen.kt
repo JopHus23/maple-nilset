@@ -24,6 +24,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import java.time.LocalDate
 import com.mapherdf.maplenilset.R
 import com.mapherdf.maplenilset.ui.theme.themeContainerBorderColor
 import com.mapherdf.maplenilset.ui.theme.themeContainerColor
@@ -64,6 +65,7 @@ fun ScheduleScreen(
 
             ScheduleWeekdayTabs(
                 selectedWeekday = state.selectedWeekday,
+                todayWeekday = LocalDate.now().dayOfWeek.value % 7,
                 onSelect = viewModel::selectWeekday,
             )
 
