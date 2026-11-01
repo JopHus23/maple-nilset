@@ -41,7 +41,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -65,6 +64,8 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import com.mapherdf.maplenilset.R
+import com.mapherdf.maplenilset.core.navigation.HomeDestination
+import com.mapherdf.maplenilset.ui.settings.CustomSettingsViewModel
 import com.mapherdf.maplenilset.ui.calendar.CalendarScreen
 import com.mapherdf.maplenilset.ui.bili.BiliNilScreen
 import com.mapherdf.maplenilset.ui.schedule.ScheduleScreen
@@ -82,10 +83,19 @@ fun HomeScreen(
     onViewColor: (String) -> Unit = {},
     onColorCopy: (String) -> Unit = {},
 ) {
+    val customViewModel: CustomSettingsViewModel = hiltViewModel()
+    val uiSettings by customViewModel.uiSettings.collectAsStateWithLifecycle()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val drawerScope = rememberCoroutineScope()
     var drawerAnimationJob by remember { mutableStateOf<Job?>(null) }
-    var selectedDestination by rememberSaveable { mutableIntStateOf(0) }
+    var selectedDestinationName by rememberSaveable { mutableStateOf<String?>(null) }
+    val visibleDestinations = uiSettings.visiblePages
+    val selectedDestination = selectedDestinationName
+        ?.let { name -> runCatching { HomeDestination.valueOf(name) }.getOrNull() }
+        ?.takeIf { it in visibleDestinations }
+        ?: uiSettings.startupPage.takeIf { it in visibleDestinations }
+        ?: visibleDestinations.firstOrNull()
+        ?: HomeDestination.HOME
     LaunchedEffect(isVisible) {
         if (!isVisible) {
             drawerAnimationJob?.cancelAndJoin()
@@ -105,23 +115,6 @@ fun HomeScreen(
         }
     }
 
-    val destinationTitles = listOf(
-        stringResource(R.string.drawer_home),
-        stringResource(R.string.drawer_calendar),
-        stringResource(R.string.drawer_note),
-        stringResource(R.string.drawer_todo),
-        stringResource(R.string.drawer_schedule),
-        stringResource(R.string.drawer_bili_nil),
-        stringResource(R.string.drawer_lienzo_color),
-    )
-    val destinationDetails = listOf(
-        stringResource(R.string.home_empty),
-        stringResource(R.string.calendar_empty),
-        stringResource(R.string.home_note_empty),
-        stringResource(R.string.home_todo_empty),
-        stringResource(R.string.home_schedule_empty),
-        stringResource(R.string.bili_nil_description),
-    )
     ModalNavigationDrawer(
         drawerState = drawerState,
         gesturesEnabled = !drawerState.isAnimationRunning,
@@ -163,30 +156,21 @@ fun HomeScreen(
                         HorizontalDivider()
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        destinationTitles.forEachIndexed { index, title ->
+                        visibleDestinations.forEach { destination ->
                             NavigationDrawerItem(
-                                label = { Text(title) },
-                                selected = selectedDestination == index,
+                                label = { Text(stringResource(destination.titleRes())) },
+                                selected = selectedDestination == destination,
                                 shape = MaterialTheme.shapes.extraSmall,
                                 icon = {
-                                    when (index) {
-                                        0 -> DrawerIcon(R.drawable.ic_home, index == selectedDestination)
-                                        1 -> DrawerIcon(R.drawable.ic_event, index == selectedDestination)
-                                        2 -> DrawerIcon(R.drawable.ic_note, index == selectedDestination)
-                                        3 -> DrawerIcon(R.drawable.ic_todo, index == selectedDestination)
-                                        4 -> DrawerIcon(R.drawable.ic_schedule, index == selectedDestination)
-                                        5 -> DrawerIcon(R.drawable.ic_bilibili, index == selectedDestination, useBrandColor = true)
-                                        6 -> DrawerIcon(R.drawable.ic_color, index == selectedDestination)
-                                        else -> DrawerIcon(R.drawable.ic_home, index == selectedDestination)
-                                    }
+                                    DrawerIcon(destination.iconRes(), destination == selectedDestination)
                                 },
                                 onClick = {
-                                    selectedDestination = index
+                                    selectedDestinationName = destination.name
                                     animateDrawer(DrawerValue.Closed)
                                 },
                                 modifier = Modifier.padding(horizontal = 12.dp),
                                 colors = NavigationDrawerItemDefaults.colors(
-                                    selectedContainerColor = if (selectedDestination == index) {
+                                    selectedContainerColor = if (selectedDestination == destination) {
                                         MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
                                     } else {
                                         Color.Transparent
@@ -203,7 +187,7 @@ fun HomeScreen(
             containerColor = Color.Transparent,
             topBar = {
                 TopAppBar(
-                    title = { Text(destinationTitles[selectedDestination]) },
+                    title = { Text(stringResource(selectedDestination.titleRes())) },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = themeContainerColor(),
                     ),
@@ -225,31 +209,58 @@ fun HomeScreen(
                     .padding(innerPadding),
                 contentAlignment = Alignment.Center,
             ) {
-            if (selectedDestination == 1) {
-                    CalendarScreen()
-            } else if (selectedDestination == 4) {
-                ScheduleScreen()
-            } else if (selectedDestination == 5) {
-                BiliNilScreen()
-            } else if (selectedDestination == 6) {
-                LienzoColorScreen(
-                    onAddColor = onAddColor,
-                    onEditColor = onEditColor,
-                    onViewColor = onViewColor,
-                    onCopyMessage = onColorCopy,
-                )
-            } else if (selectedDestination == 0) {
-                HomeTextContent()
-            } else {
-                    Text(
-                        text = destinationDetails[selectedDestination],
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                when (selectedDestination) {
+                    HomeDestination.CALENDAR -> CalendarScreen()
+                    HomeDestination.SCHEDULE -> ScheduleScreen()
+                    HomeDestination.BILI -> BiliNilScreen()
+                    HomeDestination.LIENZO -> LienzoColorScreen(
+                        onAddColor = onAddColor,
+                        onEditColor = onEditColor,
+                        onViewColor = onViewColor,
+                        onCopyMessage = onColorCopy,
+                    )
+                    HomeDestination.HOME -> HomeTextContent()
+                    HomeDestination.NOTE -> PlaceholderDestinationContent(
+                        text = stringResource(R.string.home_note_empty),
+                    )
+                    HomeDestination.TODO -> PlaceholderDestinationContent(
+                        text = stringResource(R.string.home_todo_empty),
                     )
                 }
             }
         }
     }
+}
+
+private fun HomeDestination.titleRes(): Int = when (this) {
+    HomeDestination.HOME -> R.string.drawer_home
+    HomeDestination.CALENDAR -> R.string.drawer_calendar
+    HomeDestination.NOTE -> R.string.drawer_note
+    HomeDestination.TODO -> R.string.drawer_todo
+    HomeDestination.SCHEDULE -> R.string.drawer_schedule
+    HomeDestination.BILI -> R.string.drawer_bili_nil
+    HomeDestination.LIENZO -> R.string.drawer_lienzo_color
+}
+
+@Composable
+private fun PlaceholderDestinationContent(
+    text: String,
+) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodyLarge,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+private fun HomeDestination.iconRes(): Int = when (this) {
+    HomeDestination.HOME -> R.drawable.ic_home
+    HomeDestination.CALENDAR -> R.drawable.ic_event
+    HomeDestination.NOTE -> R.drawable.ic_note
+    HomeDestination.TODO -> R.drawable.ic_todo
+    HomeDestination.SCHEDULE -> R.drawable.ic_schedule
+    HomeDestination.BILI -> R.drawable.ic_bilibili
+    HomeDestination.LIENZO -> R.drawable.ic_color
 }
 
 @Composable

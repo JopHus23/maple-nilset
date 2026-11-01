@@ -137,6 +137,17 @@
     <string name="settings_custom">自定义</string>
     <string name="custom_settings_title">自定义设置</string>
     <string name="custom_settings_empty">自定义设置待补充</string>
+    <string name="custom_settings_startup_title">启动页面</string>
+    <string name="custom_settings_startup_summary">启动应用时打开此页面</string>
+    <string name="custom_settings_sidebar_title">侧边栏排序与隐藏</string>
+    <string name="custom_settings_sidebar_summary">调整主页侧边栏顺序，至少保留一个可见页面</string>
+    <string name="custom_settings_move_up">上移</string>
+    <string name="custom_settings_move_down">下移</string>
+    <string name="custom_settings_show_page">显示页面</string>
+    <string name="custom_settings_hide_page">隐藏页面</string>
+    <string name="custom_settings_reset_title">恢复默认界面设置</string>
+    <string name="custom_settings_reset_message">确定要恢复默认的侧边栏顺序、显示状态和启动页面吗？</string>
+    <string name="custom_settings_reset_confirm">确认恢复</string>
     <string name="theme_settings_title">主题设置</string>
     <string name="theme_mode">主题模式</string>
     <string name="theme_mode_light">浅色</string>

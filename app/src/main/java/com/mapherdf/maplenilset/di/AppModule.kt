@@ -14,6 +14,8 @@ import com.mapherdf.maplenilset.data.repository.CalendarRepository
 import com.mapherdf.maplenilset.data.repository.LocalCalendarRepository
 import com.mapherdf.maplenilset.data.repository.LocalMarkdownRepository
 import com.mapherdf.maplenilset.data.repository.MarkdownRepository
+import com.mapherdf.maplenilset.data.repository.UiSettingsRepository
+import com.mapherdf.maplenilset.data.repository.LocalUiSettingsRepository
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -95,4 +97,10 @@ abstract class RepositoryModule {
     abstract fun bindMarkdownRepository(
         impl: LocalMarkdownRepository,
     ): MarkdownRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindUiSettingsRepository(
+        impl: LocalUiSettingsRepository,
+    ): UiSettingsRepository
 }
