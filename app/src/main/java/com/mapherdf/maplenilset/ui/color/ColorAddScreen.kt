@@ -140,7 +140,7 @@ fun ColorAddScreen(
             OutlinedTextField(
                 value = inputValue,
                 onValueChange = { value ->
-                    inputValue = value
+                    inputValue = value.lineSequence().first()
                     val typedResult = viewModel.parseColor(selectedFormat, value)
                     if (typedResult != null && (originalFormat != selectedFormat || value != originalValue)) {
                         originalFormat = selectedFormat
