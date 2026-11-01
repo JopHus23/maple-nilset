@@ -34,6 +34,10 @@
     <string name="lienzo_color_copied">已复制颜色信息</string>
     <string name="lienzo_color_empty">还没有保存的颜色\n点击右下角 + 号添加</string>
     <string name="lienzo_color_list_hint">*点击色卡查看颜色详情</string>
+    <string name="lienzo_color_clipboard_read">从剪贴板读取</string>
+    <string name="lienzo_color_clipboard_message">是否读取剪贴板中的最新内容？</string>
+    <string name="lienzo_color_clipboard_confirm">读取</string>
+    <string name="lienzo_color_clipboard_invalid">无效信息</string>
     <string name="lienzo_color_input_hex">颜色值</string>
     <string name="lienzo_color_input_hex_hint">例：#RRGGBB</string>
     <string name="lienzo_color_input_rgb_hint">例：rgb(216, 124, 95) 或 216, 124, 95</string>

@@ -37,6 +37,12 @@ data class ColorParseResult(
     val hex: String,
 )
 
+data class ColorClipboardImport(
+    val name: String?,
+    val rgb: RgbColor,
+    val inputValue: String,
+)
+
 @HiltViewModel
 class ColorViewModel @Inject constructor(
     private val colorRepository: ColorRepository,
@@ -63,6 +69,61 @@ class ColorViewModel @Inject constructor(
             ColorFormat.LAB -> parseLab(input)?.let { ColorConverter.labToRgb(it) }
         } ?: return null
         return ColorParseResult(rgb = rgb, hex = ColorConverter.rgbToHex(rgb))
+    }
+
+    fun parseClipboard(format: ColorFormat, input: String): ColorParseResult? {
+        val singleLine = input.lineSequence().first().trim()
+        if (singleLine.isEmpty()) return null
+        if (format == ColorFormat.HEX) {
+            if (!Regex("^#?[0-9A-Fa-f]{6}$").matches(singleLine)) return null
+            return parseColor(format, singleLine)
+        }
+        val prefixMatch = Regex("^([A-Za-z]+)\\s*\\(").matchEntire(singleLine)
+        if (prefixMatch != null) {
+            val prefix = prefixMatch.groupValues[1].lowercase()
+            val expectedPrefixes = when (format) {
+                ColorFormat.RGB -> listOf("rgb")
+                ColorFormat.CMYK -> listOf("cmyk")
+                ColorFormat.HSL -> listOf("hsl")
+                ColorFormat.HSV_HSB -> listOf("hsv", "hsb")
+                ColorFormat.LAB -> listOf("lab")
+                else -> emptyList()
+            }
+            if (prefix !in expectedPrefixes) return null
+        }
+        val numbers = strictNumericValues(singleLine) ?: return null
+        val expectedCount = when (format) {
+            ColorFormat.CMYK -> 4
+            else -> 3
+        }
+        if (numbers.size != expectedCount) return null
+        val isIntegerFormat = format != ColorFormat.LAB
+        if (isIntegerFormat && numbers.any { it != kotlin.math.floor(it) }) return null
+        val isValid = when (format) {
+            ColorFormat.RGB -> numbers.all { it in 0.0..255.0 }
+            ColorFormat.CMYK -> numbers.all { it in 0.0..100.0 }
+            ColorFormat.HSL -> numbers[0] in 0.0..360.0 && numbers.drop(1).all { it in 0.0..100.0 }
+            ColorFormat.HSV_HSB -> numbers[0] in 0.0..360.0 && numbers.drop(1).all { it in 0.0..100.0 }
+            ColorFormat.LAB -> numbers[0] in 0.0..100.0 && numbers[1] in -128.0..127.0 && numbers[2] in -128.0..127.0
+            else -> false
+        }
+        if (!isValid) return null
+        return parseColor(format, singleLine)
+    }
+
+    fun parseColorClipboard(text: String): ColorClipboardImport? {
+        val lines = text.lines().map { it.trim() }.filter { it.isNotEmpty() }
+        val labelRegex = Regex("^(HEX|RGB|CMYK|HSL|HSV|HSB|NCS|LAB|LCh|CIE-xy)\\s*\\(", RegexOption.IGNORE_CASE)
+        if (lines.count { labelRegex.containsMatchIn(it) } < 2) return null
+        val hexLine = lines.firstOrNull { it.startsWith("HEX(", ignoreCase = true) } ?: return null
+        val hexValue = Regex("#[0-9A-Fa-f]{6}").find(hexLine)?.value ?: return null
+        val rgb = ColorConverter.hexToRgb(hexValue) ?: return null
+        val name = lines.firstOrNull { !labelRegex.containsMatchIn(it) && ColorConverter.hexToRgb(it.removePrefix("#")) == null }
+        return ColorClipboardImport(
+            name = name?.trim()?.takeIf { it.isNotEmpty() },
+            rgb = rgb,
+            inputValue = ColorConverter.rgbToHex(rgb),
+        )
     }
 
     fun formatForRgb(format: ColorFormat, rgb: RgbColor): String = when (format) {
@@ -219,6 +280,15 @@ class ColorViewModel @Inject constructor(
 
     private fun extractNumbers(input: String): List<Double> {
         return Regex("-?\\d+\\.?\\d*").findAll(input).mapNotNull { it.value.toDoubleOrNull() }.toList()
+    }
+
+    private fun strictNumericValues(input: String): List<Double>? {
+        val match = Regex("^[A-Za-z]+\\s*\\((.*)\\)$").matchEntire(input)
+        val body = match?.groupValues?.get(1) ?: input
+        val values = body.split(Regex("\\s*,\\s*|\\s+"))
+            .filter { it.isNotEmpty() }
+            .map { value -> value.removeSuffix("%").toDoubleOrNull() ?: return null }
+        return values
     }
 
     private fun formatDouble(value: Double, digits: Int = 1): String {
