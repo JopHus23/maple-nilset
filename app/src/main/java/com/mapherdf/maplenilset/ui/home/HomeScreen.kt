@@ -224,6 +224,14 @@ fun HomeScreen(
                     .padding(innerPadding),
                 contentAlignment = Alignment.Center,
             ) {
+                if (selectedDestination == 6 && colorSubPage != null) {
+                    val editId = colorSubPage?.removePrefix("edit_")?.takeIf { colorSubPage?.startsWith("edit_") == true }
+                    ColorAddScreen(
+                        editId = editId,
+                        onNavigateBack = { colorSubPage = null },
+                    )
+                    return@Box
+                }
             if (selectedDestination == 1) {
                     CalendarScreen()
             } else if (selectedDestination == 4) {
