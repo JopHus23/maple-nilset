@@ -50,6 +50,8 @@
     <string name="lienzo_color_desc_ncs">瑞典自然色彩系统，以黑度、彩度和基本色相描述（如 S 2080-Y20R）；本应用为几何近似换算，非官方精确值。</string>
     <string name="lienzo_color_desc_lab">CIE 1976 L*a*b* 均匀颜色色彩空间：L* 明度，a* 红绿轴，b* 黄蓝轴，色彩计算基础。</string>
     <string name="lienzo_color_domain_position">色域位置 · CIE 1931 色度图</string>
+    <string name="lienzo_color_srgb_inside">位于sRGB色域三角形内</string>
+    <string name="lienzo_color_srgb_outside">位于sRGB色域三角形外</string>
     <string name="lienzo_color_perceptual">感知属性</string>
     <string name="lienzo_color_lightness">明度 L*</string>
     <string name="lienzo_color_chroma">纯度 / 彩度 C*</string>

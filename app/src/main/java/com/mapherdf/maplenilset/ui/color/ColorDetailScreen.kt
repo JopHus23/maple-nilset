@@ -387,10 +387,17 @@ private fun CiePositionCard(rgb: RgbColor) {
                 drawPath(triangle, Color.White.copy(alpha = 0.35f), style = Stroke(width = 2.dp.toPx()))
                 val point = Offset(x(cie.x), y(cie.y))
                 drawCircle(Color(rgb.r, rgb.g, rgb.b), radius = 10.dp.toPx(), center = point)
-                drawCircle(Color.White, radius = 10.dp.toPx(), center = point, style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.dp.toPx()))
+                drawCircle(Color.White, radius = 10.dp.toPx(), center = point, style = Stroke(width = 2.dp.toPx()))
             }
+            val gamutStatus = stringResource(
+                if (ColorConverter.isInsideSrgbGamut(cie)) {
+                    R.string.lienzo_color_srgb_inside
+                } else {
+                    R.string.lienzo_color_srgb_outside
+                },
+            )
             Text(
-                text = "CIE-xy(${formatValue(cie.x, 4)}, ${formatValue(cie.y, 4)})",
+                text = "CIE-xy(${formatValue(cie.x, 4)}, ${formatValue(cie.y, 4)}) · $gamutStatus",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

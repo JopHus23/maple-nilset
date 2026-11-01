@@ -126,8 +126,8 @@ fun ColorAddScreen(
                         } else {
                             inputValue = viewModel.formatForRgb(format, currentResult.rgb)
                         }
-                        selectedFormat = format
                     }
+                    selectedFormat = format
                 },
             )
 

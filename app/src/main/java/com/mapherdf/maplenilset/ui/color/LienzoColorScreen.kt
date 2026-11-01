@@ -77,6 +77,7 @@ fun LienzoColorScreen(
     var pendingDeleteId by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
+        modifier = Modifier.fillMaxSize(),
         containerColor = Color.Transparent,
         floatingActionButton = {
             Box(

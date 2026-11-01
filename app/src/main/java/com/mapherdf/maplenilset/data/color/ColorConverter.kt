@@ -151,6 +151,22 @@ object ColorConverter {
         return CieXyColor(x / sum, y / sum)
     }
 
+    fun isInsideSrgbGamut(cie: CieXyColor): Boolean {
+        fun cross(ax: Double, ay: Double, bx: Double, by: Double, px: Double, py: Double): Double {
+            return (bx - ax) * (py - ay) - (by - ay) * (px - ax)
+        }
+
+        val red = 0.640 to 0.330
+        val green = 0.300 to 0.600
+        val blue = 0.150 to 0.060
+        val d1 = cross(red.first, red.second, green.first, green.second, cie.x, cie.y)
+        val d2 = cross(green.first, green.second, blue.first, blue.second, cie.x, cie.y)
+        val d3 = cross(blue.first, blue.second, red.first, red.second, cie.x, cie.y)
+        val hasNegative = d1 < 0 || d2 < 0 || d3 < 0
+        val hasPositive = d1 > 0 || d2 > 0 || d3 > 0
+        return !(hasNegative && hasPositive)
+    }
+
     fun rgbToNcs(rgb: RgbColor): NcsColor {
         val hsv = rgbToHsv(rgb)
         val hue = ncsHueName(hsv.h.toDouble())
