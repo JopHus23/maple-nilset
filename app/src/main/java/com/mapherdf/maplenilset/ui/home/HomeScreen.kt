@@ -109,13 +109,18 @@ fun HomeScreen(
     }
 
     fun animateDrawer(targetValue: DrawerValue) {
-        val previousJob = drawerAnimationJob
+        drawerAnimationJob?.cancel()
         drawerAnimationJob = drawerScope.launch {
-            previousJob?.cancelAndJoin()
             if (targetValue == DrawerValue.Open) {
                 drawerState.openElastic()
             } else {
-                drawerState.close()
+                drawerState.animateTo(
+                    targetValue = DrawerValue.Closed,
+                    anim = spring<Float>(
+                        dampingRatio = 0.88f,
+                        stiffness = 900f,
+                    ),
+                )
             }
         }
     }
@@ -127,7 +132,6 @@ fun HomeScreen(
         drawerContent = {
             BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
                 val drawerWidth = minOf(maxWidth * 0.80f, 320.dp)
-                val blankWidth = (maxWidth - drawerWidth).coerceAtLeast(0.dp)
                 Box(
                     modifier = Modifier
                         .fillMaxHeight()
@@ -183,67 +187,68 @@ fun HomeScreen(
                     }
                 }
 
-                if (drawerState.targetValue == DrawerValue.Open) {
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.CenterEnd)
-                            .fillMaxHeight()
-                            .width(blankWidth)
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = null,
-                            ) {
-                                animateDrawer(DrawerValue.Closed)
-                            },
-                    )
-                }
             }
         },
     ) {
-        Scaffold(
-            containerColor = Color.Transparent,
-            topBar = {
-                TopAppBar(
-                    title = { Text(stringResource(selectedDestination.titleRes())) },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = themeContainerColor(),
-                    ),
-                    navigationIcon = {
-                    IconButton(onClick = { animateDrawer(DrawerValue.Open) }) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_menu),
-                                contentDescription = stringResource(R.string.drawer_open),
-                                tint = MaterialTheme.colorScheme.onSurface,
-                            )
-                        }
-                    },
-                )
-            },
-        ) { innerPadding ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                contentAlignment = Alignment.Center,
-            ) {
-                when (selectedDestination) {
-                    HomeDestination.CALENDAR -> CalendarScreen()
-                    HomeDestination.SCHEDULE -> ScheduleScreen()
-                    HomeDestination.BILI -> BiliNilScreen()
-                    HomeDestination.LIENZO -> LienzoColorScreen(
-                        onAddColor = onAddColor,
-                        onEditColor = onEditColor,
-                        onViewColor = onViewColor,
-                        onCopyMessage = onColorCopy,
+        Box(modifier = Modifier.fillMaxSize()) {
+            Scaffold(
+                containerColor = Color.Transparent,
+                topBar = {
+                    TopAppBar(
+                        title = { Text(stringResource(selectedDestination.titleRes())) },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = themeContainerColor(),
+                        ),
+                        navigationIcon = {
+                        IconButton(onClick = { animateDrawer(DrawerValue.Open) }) {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_menu),
+                                    contentDescription = stringResource(R.string.drawer_open),
+                                    tint = MaterialTheme.colorScheme.onSurface,
+                                )
+                            }
+                        },
                     )
-                    HomeDestination.HOME -> HomeTextContent()
-                    HomeDestination.NOTE -> PlaceholderDestinationContent(
-                        text = stringResource(R.string.home_note_empty),
-                    )
-                    HomeDestination.TODO -> PlaceholderDestinationContent(
-                        text = stringResource(R.string.home_todo_empty),
-                    )
+                },
+            ) { innerPadding ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    when (selectedDestination) {
+                        HomeDestination.CALENDAR -> CalendarScreen()
+                        HomeDestination.SCHEDULE -> ScheduleScreen()
+                        HomeDestination.BILI -> BiliNilScreen()
+                        HomeDestination.LIENZO -> LienzoColorScreen(
+                            onAddColor = onAddColor,
+                            onEditColor = onEditColor,
+                            onViewColor = onViewColor,
+                            onCopyMessage = onColorCopy,
+                        )
+                        HomeDestination.HOME -> HomeTextContent()
+                        HomeDestination.NOTE -> PlaceholderDestinationContent(
+                            text = stringResource(R.string.home_note_empty),
+                        )
+                        HomeDestination.TODO -> PlaceholderDestinationContent(
+                            text = stringResource(R.string.home_todo_empty),
+                        )
+                    }
                 }
+            }
+
+            if (drawerState.targetValue == DrawerValue.Open || drawerState.offset.value > 0f) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                        ) {
+                            animateDrawer(DrawerValue.Closed)
+                        },
+                )
             }
         }
     }
