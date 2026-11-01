@@ -24,6 +24,9 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -49,6 +52,7 @@ import com.mapherdf.maplenilset.ui.settings.NotificationSettingsScreen
 import com.mapherdf.maplenilset.ui.settings.BackgroundCropScreen
 import com.mapherdf.maplenilset.ui.settings.AboutScreen
 import com.mapherdf.maplenilset.ui.session.ThemeViewModel
+import com.mapherdf.maplenilset.ui.splash.SplashScreen
 import com.mapherdf.maplenilset.ui.theme.ATOMTheme
 import com.mapherdf.maplenilset.ui.theme.rememberCustomBackgroundImage
 
@@ -62,6 +66,7 @@ class MainActivity : ComponentActivity() {
             val themeViewModel: ThemeViewModel = hiltViewModel()
             val themeSettings by themeViewModel.themeSettings.collectAsStateWithLifecycle()
             val isThemeReady by themeViewModel.isThemeReady.collectAsStateWithLifecycle()
+            var showSplash by remember { mutableStateOf(true) }
 
             ATOMTheme(settings = themeSettings) {
                 Surface(
@@ -69,13 +74,8 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background,
                 ) {
                     val backgroundImage = rememberCustomBackgroundImage(themeSettings.backgroundImageUri)
-                    if (!isThemeReady) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            CircularProgressIndicator()
-                        }
+                    if (!isThemeReady || showSplash) {
+                        SplashScreen(onFinished = { showSplash = false })
                         return@Surface
                     }
 
