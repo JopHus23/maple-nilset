@@ -70,13 +70,12 @@ fun LienzoColorScreen(
     onAddColor: () -> Unit,
     onEditColor: (String) -> Unit,
     onViewColor: (String) -> Unit,
+    onCopyMessage: (String) -> Unit,
     viewModel: ColorViewModel = hiltViewModel(),
 ) {
     val savedColors by viewModel.savedColors.collectAsStateWithLifecycle()
     val copiedMessage = stringResource(R.string.lienzo_color_copied)
     val clipboard = LocalClipboardManager.current
-    val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
     var selectedColorId by remember { mutableStateOf<String?>(null) }
     var pendingDeleteId by remember { mutableStateOf<String?>(null) }
 
@@ -155,27 +154,12 @@ fun LienzoColorScreen(
                         },
                         onCopy = {
                             clipboard.setText(AnnotatedString(viewModel.colorInfo(savedColor)))
-                            scope.launch {
-                                snackbarHostState.showSnackbar(copiedMessage)
-                            }
+                            onCopyMessage(copiedMessage)
                         },
                     )
                 }
             }
         }
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier
-                .padding(innerPadding)
-                .padding(bottom = 16.dp),
-            snackbar = { snackbarData ->
-                LaunchedEffect(snackbarData) {
-                    delay(1_500L)
-                    snackbarData.dismiss()
-                }
-                Snackbar(snackbarData)
-            },
-        )
     }
 
     if (pendingDeleteId != null) {

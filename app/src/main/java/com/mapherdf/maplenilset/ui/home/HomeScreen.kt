@@ -80,6 +80,7 @@ fun HomeScreen(
     onAddColor: () -> Unit = {},
     onEditColor: (String) -> Unit = {},
     onViewColor: (String) -> Unit = {},
+    onColorCopy: (String) -> Unit = {},
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val drawerScope = rememberCoroutineScope()
@@ -235,6 +236,7 @@ fun HomeScreen(
                     onAddColor = onAddColor,
                     onEditColor = onEditColor,
                     onViewColor = onViewColor,
+                    onCopyMessage = onColorCopy,
                 )
             } else if (selectedDestination == 0) {
                 HomeTextContent()
