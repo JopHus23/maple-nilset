@@ -64,14 +64,6 @@ fun SplashScreen(
                 val radius = 60.dp.toPx()
                 val center = Offset(size.width / 2f, size.height / 2f)
 
-                drawCircle(
-                    color = color,
-                    radius = radius,
-                    center = center,
-                    alpha = exitProgress.value,
-                    style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
-                )
-
                 val circleSweep = circleProgress.value
                 if (circleSweep > 0f) {
                     drawArc(
