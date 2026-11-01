@@ -34,6 +34,9 @@ fun MainScreen(
     onOpenThemeSettings: () -> Unit,
     onOpenCustomSettings: () -> Unit,
     onOpenAbout: () -> Unit,
+    onAddColor: () -> Unit,
+    onEditColor: (String) -> Unit,
+    onViewColor: (String) -> Unit,
 ) {
     var selectedRoute by rememberSaveable { mutableStateOf(AppRoutes.Tab.HOME) }
     val targetPage = routePage(selectedRoute)
@@ -62,6 +65,9 @@ fun MainScreen(
             ) {
                 HomeScreen(
                     isVisible = selectedRoute == AppRoutes.Tab.HOME,
+                    onAddColor = onAddColor,
+                    onEditColor = onEditColor,
+                    onViewColor = onViewColor,
                 )
             }
             Box(

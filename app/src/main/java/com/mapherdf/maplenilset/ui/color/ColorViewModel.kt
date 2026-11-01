@@ -4,10 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mapherdf.maplenilset.data.color.ColorConverter
 import com.mapherdf.maplenilset.data.color.ColorName
+import com.mapherdf.maplenilset.data.color.ColorNameEntry
 import com.mapherdf.maplenilset.data.color.CmykColor
 import com.mapherdf.maplenilset.data.color.HslColor
 import com.mapherdf.maplenilset.data.color.HsvColor
 import com.mapherdf.maplenilset.data.color.LabColor
+import com.mapherdf.maplenilset.data.color.NcsColor
 import com.mapherdf.maplenilset.data.color.RgbColor
 import com.mapherdf.maplenilset.data.color.SavedColor
 import com.mapherdf.maplenilset.data.repository.ColorRepository
@@ -53,7 +55,7 @@ class ColorViewModel @Inject constructor(
             ColorFormat.CMYK -> parseCmyk(input)?.let { ColorConverter.cmykToRgb(it) }
             ColorFormat.HSL -> parseHsl(input)?.let { ColorConverter.hslToRgb(it) }
             ColorFormat.HSV_HSB -> parseHsv(input)?.let { ColorConverter.hsvToRgb(it) }
-            ColorFormat.NCS -> null
+            ColorFormat.NCS -> parseNcs(input)?.let { ColorConverter.ncsToRgb(it) }
             ColorFormat.LAB -> parseLab(input)?.let { ColorConverter.labToRgb(it) }
         } ?: return null
         return ColorParseResult(rgb = rgb, hex = ColorConverter.rgbToHex(rgb))
@@ -76,7 +78,7 @@ class ColorViewModel @Inject constructor(
         }
         ColorFormat.NCS -> {
             val ncs = ColorConverter.rgbToNcs(rgb)
-            "NCS S ${ncs.blackness}${ncs.chromaticness}-${ncs.hue}"
+            "NCS S ${ncs.blackness.toString().padStart(2, '0')}${ncs.chromaticness.toString().padStart(2, '0')}-${ncs.hue}"
         }
         ColorFormat.LAB -> {
             val lab = ColorConverter.rgbToLab(rgb)
@@ -84,7 +86,32 @@ class ColorViewModel @Inject constructor(
         }
     }
 
-    fun colorName(rgb: RgbColor): ColorName.ColorNameEntry? = ColorName.lookup(rgb)
+    fun colorName(rgb: RgbColor): ColorNameEntry? = ColorName.lookup(rgb)
+
+    fun colorInfo(color: SavedColor): String {
+        val rgb = ColorConverter.hexToRgb(color.hex) ?: return color.name
+        val hsv = ColorConverter.rgbToHsv(rgb)
+        val cmyk = ColorConverter.rgbToCmyk(rgb)
+        val hsl = ColorConverter.rgbToHsl(rgb)
+        val ncs = ColorConverter.rgbToNcs(rgb)
+        val lab = ColorConverter.rgbToLab(rgb)
+        val lch = ColorConverter.rgbToLch(rgb)
+        val cie = ColorConverter.rgbToCieXy(rgb)
+        val ncsCode = "${ncs.blackness.toString().padStart(2, '0')}${ncs.chromaticness.toString().padStart(2, '0')}-${ncs.hue}"
+        return listOf(
+            color.name,
+            "HEX(${ColorConverter.rgbToHex(rgb)})",
+            "RGB(${rgb.r}, ${rgb.g}, ${rgb.b})",
+            "CMYK(${cmyk.c}%, ${cmyk.m}%, ${cmyk.y}%, ${cmyk.k}%)",
+            "HSL(${hsl.h}, ${hsl.s}%, ${hsl.l}%)",
+            "HSV(${hsv.h}, ${hsv.s}%, ${hsv.v}%)",
+            "HSB(${hsv.h}, ${hsv.s}%, ${hsv.v}%)",
+            "NCS S $ncsCode",
+            "LAB(${formatDouble(lab.l)}, ${formatDouble(lab.a)}, ${formatDouble(lab.b)})",
+            "LCh(${formatDouble(lch.l)}, ${formatDouble(lch.c)}, ${formatDouble(lch.h)})",
+            "CIE-xy(${formatDouble(cie.x, 4)}, ${formatDouble(cie.y, 4)})",
+        ).joinToString("\n")
+    }
 
     fun saveColor(
         editId: String?,
@@ -104,6 +131,7 @@ class ColorViewModel @Inject constructor(
                 name = resolvedName,
                 hex = hex,
                 sourceType = format.name,
+                sourceValue = inputValue,
                 createdAt = System.currentTimeMillis(),
             )
             if (editId != null) {
@@ -172,15 +200,25 @@ class ColorViewModel @Inject constructor(
         )
     }
 
+    private fun parseNcs(input: String): NcsColor? {
+        val normalized = input.uppercase().replace(Regex("\\s+"), " ").trim()
+        val match = Regex("(?:S\\s*)?(\\d{2,4})[-\\s]?([YRGB]{2,4})").find(normalized) ?: return null
+        val code = match.groupValues[1]
+        val hue = match.groupValues[2]
+        val blackness = code.substring(0, 2).toIntOrNull() ?: return null
+        val chromaticness = code.substring(2).toIntOrNull() ?: return null
+        return NcsColor(blackness, chromaticness, hue)
+    }
+
     private fun extractNumbers(input: String): List<Double> {
         return Regex("-?\\d+\\.?\\d*").findAll(input).mapNotNull { it.value.toDoubleOrNull() }.toList()
     }
 
-    private fun formatDouble(value: Double): String {
+    private fun formatDouble(value: Double, digits: Int = 1): String {
         return if (value == value.toLong().toDouble()) {
             value.toLong().toString()
         } else {
-            String.format("%.1f", value)
+            String.format("%.${digits}f", value)
         }
     }
 }

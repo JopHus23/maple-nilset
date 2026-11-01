@@ -152,14 +152,31 @@ object ColorConverter {
     }
 
     fun rgbToNcs(rgb: RgbColor): NcsColor {
-        val lab = rgbToLab(rgb)
-        val c = sqrt(lab.a * lab.a + lab.b * lab.b)
-        val chromaticness = (c / 1.0 * 100).roundToInt().coerceIn(0, 100)
-        val blackness = ((100 - lab.l) * 0.9).roundToInt().coerceIn(0, 100)
-        var hueAngle = Math.toDegrees(kotlin.math.atan2(lab.b, lab.a))
-        if (hueAngle < 0) hueAngle += 360
-        val hue = ncsHueName(hueAngle)
+        val hsv = rgbToHsv(rgb)
+        val hue = ncsHueName(hsv.h.toDouble())
+        val blackness = (100 - hsv.v).coerceIn(0, 100)
+        val chromaticness = ((hsv.s / 100.0) * (hsv.v / 100.0) * 100)
+            .roundToInt()
+            .coerceIn(0, 100 - blackness)
         return NcsColor(blackness, chromaticness, hue)
+    }
+
+    fun ncsToRgb(ncs: NcsColor): RgbColor? {
+        val blackness = ncs.blackness / 100.0
+        val chromaticness = ncs.chromaticness / 100.0
+        val whiteness = 1 - blackness - chromaticness
+        if (whiteness < 0) return null
+
+        val hueAngle = ncsHueAngle(ncs.hue) ?: return null
+        val value = blackness + chromaticness
+        val saturation = if (value == 0.0) 0.0 else chromaticness / value
+        return hsvToRgb(
+            HsvColor(
+                hueAngle.roundToInt(),
+                (saturation * 100).roundToInt(),
+                (value * 100).roundToInt(),
+            ),
+        )
     }
 
     fun hslToRgb(hsl: HslColor): RgbColor {
@@ -252,19 +269,39 @@ object ColorConverter {
 
     private fun ncsHueName(angle: Double): String {
         val sectors = listOf(
-            0.0 to "Y", 30.0 to "YG", 60.0 to "G", 90.0 to "GB",
-            120.0 to "B", 150.0 to "RB", 180.0 to "R",
+            0.0 to "Y", 90.0 to "R", 180.0 to "B", 270.0 to "G", 360.0 to "Y",
         )
-        val shifted = if (angle >= 0 && angle <= 180) angle else if (angle > 180) angle - 360 else angle + 360
+        val shifted = ((angle % 360.0) + 360.0) % 360.0
         for (i in 0 until sectors.size - 1) {
             if (shifted >= sectors[i].first && shifted < sectors[i + 1].first) {
-                val ratio = (shifted - sectors[i].first) / 30.0
+                val ratio = (shifted - sectors[i].first) / 90.0
                 val pct = (ratio * 100).roundToInt()
-                return if (pct == 0) sectors[i].second else if (pct == 100) sectors[i + 1].second else {
-                    "${sectors[i + 1].second}${pct}${sectors[i].second}"
+                return if (pct == 0 || pct == 100) {
+                    sectors[i].second
+                } else {
+                    "${sectors[i].second}${pct}${sectors[i + 1].second}"
                 }
             }
         }
         return "Y"
+    }
+
+    private fun ncsHueAngle(hue: String): Double? {
+        val cleaned = hue.uppercase().trim()
+        if (cleaned.length < 2) return null
+        val pct = Regex("(\\d+)").find(cleaned)?.groupValues?.get(1)?.toIntOrNull() ?: 0
+        val sector = when {
+            cleaned.contains("YR") -> 0.0 to 90.0
+            cleaned.contains("RB") -> 90.0 to 180.0
+            cleaned.contains("BG") -> 180.0 to 270.0
+            cleaned.contains("GY") -> 270.0 to 360.0
+            cleaned == "Y" -> 0.0 to 0.0
+            cleaned == "R" -> 90.0 to 90.0
+            cleaned == "B" -> 180.0 to 180.0
+            cleaned == "G" -> 270.0 to 270.0
+            else -> return null
+        }
+        val base = sector.first
+        return base + (pct / 100.0) * (sector.second - sector.first)
     }
 }

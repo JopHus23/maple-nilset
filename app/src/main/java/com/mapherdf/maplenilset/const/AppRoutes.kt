@@ -14,10 +14,17 @@ object AppRoutes {
     const val CUSTOM_SETTINGS = "custom_settings"
     const val ABOUT = "about"
     const val BACKGROUND_CROP = "background_crop/{sourceUri}"
+    const val COLOR_ADD = "color/add"
+    const val COLOR_EDIT = "color/edit/{colorId}"
+    const val COLOR_DETAIL = "color/detail/{colorId}"
 
     fun backgroundCrop(sourceUri: String): String {
         return "background_crop/${Uri.encode(sourceUri)}"
     }
+
+    fun colorEdit(colorId: String): String = "color/edit/$colorId"
+
+    fun colorDetail(colorId: String): String = "color/detail/$colorId"
 
     object Tab {
         const val HOME = "home"

@@ -27,7 +27,7 @@
     <string name="lienzo_color_edit">编辑颜色</string>
     <string name="lienzo_color_detail">颜色详情</string>
     <string name="lienzo_color_save">保存颜色</string>
-    <string name="lienzo_color_name_hint">保存颜色名称（可选，默认为色值）</string>
+    <string name="lienzo_color_name_hint">保存颜色名称\n（可选，默认为色值）</string>
     <string name="lienzo_color_delete_title">确认删除</string>
     <string name="lienzo_color_delete_message">确定要删除这个色卡吗？</string>
     <string name="lienzo_color_delete_confirm">确认删除</string>
@@ -41,7 +41,7 @@
     <string name="lienzo_color_input_hsv_hint">例：hsv(14, 56%, 84%) 或 14, 56, 84</string>
     <string name="lienzo_color_input_ncs_hint">例：NCS S 1555-Y75R</string>
     <string name="lienzo_color_input_lab_hint">例：lab(61.5, 32.9, 31.3) 或 61.5, 32.9, 31.3</string>
-    <string name="lienzo_color_desc_hex">十六进制网络色值（sRGB），以 #RRGGBB 表示，Web/CSS 通用。</string>
+    <string name="lienzo_color_desc_hex">十六进制网络色值（sRGB），Web/CSS 通用。</string>
     <string name="lienzo_color_desc_rgb">红绿蓝三通道加色模型（0–255），显示器、屏幕发光设备的原生色彩空间。</string>
     <string name="lienzo_color_desc_cmyk">青品红黄黑四色减色印刷模型（0–100%），用于印刷四色套印。</string>
     <string name="lienzo_color_desc_hsl">色相 H 和亮度 Lightness，中点 50% 灰，CSS 与设计工具常用。</string>

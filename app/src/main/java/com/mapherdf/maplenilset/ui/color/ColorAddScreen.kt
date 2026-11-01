@@ -26,9 +26,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -39,7 +41,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mapherdf.maplenilset.R
+import com.mapherdf.maplenilset.data.color.ColorConverter
 import com.mapherdf.maplenilset.ui.theme.themeContainerBorderColor
 import com.mapherdf.maplenilset.ui.theme.themeContainerColor
 
@@ -53,12 +57,28 @@ fun ColorAddScreen(
     var selectedFormat by remember { mutableStateOf(ColorFormat.HEX) }
     var inputValue by remember { mutableStateOf("") }
     var colorName by remember { mutableStateOf("") }
+    var originalFormat by remember { mutableStateOf<ColorFormat?>(null) }
+    var originalValue by remember { mutableStateOf("") }
+    var didLoadEdit by rememberSaveable { mutableStateOf(false) }
 
     val parseResult = remember(inputValue, selectedFormat) {
         if (inputValue.isBlank()) null else viewModel.parseColor(selectedFormat, inputValue)
     }
+    val savedColors by viewModel.savedColors.collectAsStateWithLifecycle()
+    val editingColor = editId?.let { id -> savedColors.find { it.id == id } }
     val rgb = parseResult?.rgb
     val nameEntry = rgb?.let { viewModel.colorName(it) }
+
+    LaunchedEffect(editingColor) {
+        val color = editingColor ?: return@LaunchedEffect
+        if (didLoadEdit) return@LaunchedEffect
+        val sourceFormat = runCatching { ColorFormat.valueOf(color.sourceType) }.getOrDefault(ColorFormat.HEX)
+        val sourceRgb = ColorConverter.hexToRgb(color.hex)
+        selectedFormat = sourceFormat
+        inputValue = color.sourceValue ?: sourceRgb?.let { viewModel.formatForRgb(sourceFormat, it) }.orEmpty()
+        colorName = color.name
+        didLoadEdit = true
+    }
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -92,9 +112,17 @@ fun ColorAddScreen(
                 onSelect = { format ->
                     val currentResult = if (inputValue.isNotBlank()) viewModel.parseColor(selectedFormat, inputValue) else null
                     if (currentResult != null) {
-                        inputValue = viewModel.formatForRgb(format, currentResult.rgb)
+                        if (originalFormat == null) {
+                            originalFormat = selectedFormat
+                            originalValue = inputValue
+                        }
+                        if (format == originalFormat) {
+                            inputValue = originalValue
+                        } else {
+                            inputValue = viewModel.formatForRgb(format, currentResult.rgb)
+                        }
+                        selectedFormat = format
                     }
-                    selectedFormat = format
                 },
             )
 
@@ -106,7 +134,14 @@ fun ColorAddScreen(
 
             OutlinedTextField(
                 value = inputValue,
-                onValueChange = { inputValue = it },
+                onValueChange = { value ->
+                    inputValue = value
+                    val typedResult = viewModel.parseColor(selectedFormat, value)
+                    if (typedResult != null && (originalFormat != selectedFormat || value != originalValue)) {
+                        originalFormat = selectedFormat
+                        originalValue = value
+                    }
+                },
                 label = { Text(stringResource(R.string.lienzo_color_input_hex)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,

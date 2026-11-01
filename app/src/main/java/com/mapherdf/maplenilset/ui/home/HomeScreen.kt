@@ -69,7 +69,6 @@ import com.mapherdf.maplenilset.ui.calendar.CalendarScreen
 import com.mapherdf.maplenilset.ui.bili.BiliNilScreen
 import com.mapherdf.maplenilset.ui.schedule.ScheduleScreen
 import com.mapherdf.maplenilset.ui.color.LienzoColorScreen
-import com.mapherdf.maplenilset.ui.color.ColorAddScreen
 import com.mapherdf.maplenilset.ui.markdown.MarkdownText
 import com.mapherdf.maplenilset.ui.theme.themeContainerColor
 import com.mapherdf.maplenilset.ui.theme.themeDrawerMaskColor
@@ -78,13 +77,14 @@ import com.mapherdf.maplenilset.ui.theme.themeDrawerMaskColor
 @Composable
 fun HomeScreen(
     isVisible: Boolean,
+    onAddColor: () -> Unit = {},
+    onEditColor: (String) -> Unit = {},
+    onViewColor: (String) -> Unit = {},
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val drawerScope = rememberCoroutineScope()
     var drawerAnimationJob by remember { mutableStateOf<Job?>(null) }
     var selectedDestination by rememberSaveable { mutableIntStateOf(0) }
-    var colorSubPage by remember { mutableStateOf<String?>(null) }
-
     LaunchedEffect(isVisible) {
         if (!isVisible) {
             drawerAnimationJob?.cancelAndJoin()
@@ -224,14 +224,6 @@ fun HomeScreen(
                     .padding(innerPadding),
                 contentAlignment = Alignment.Center,
             ) {
-                if (selectedDestination == 6 && colorSubPage != null) {
-                    val editId = colorSubPage?.removePrefix("edit_")?.takeIf { colorSubPage?.startsWith("edit_") == true }
-                    ColorAddScreen(
-                        editId = editId,
-                        onNavigateBack = { colorSubPage = null },
-                    )
-                    return@Box
-                }
             if (selectedDestination == 1) {
                     CalendarScreen()
             } else if (selectedDestination == 4) {
@@ -240,10 +232,9 @@ fun HomeScreen(
                 BiliNilScreen()
             } else if (selectedDestination == 6) {
                 LienzoColorScreen(
-                    onAddColor = { colorSubPage = "add" },
-                    onEditColor = { id -> colorSubPage = "edit_$id" },
-                    onViewColor = { id -> colorSubPage = "view_$id" },
-                    onRemoveColor = { },
+                    onAddColor = onAddColor,
+                    onEditColor = onEditColor,
+                    onViewColor = onViewColor,
                 )
             } else if (selectedDestination == 0) {
                 HomeTextContent()

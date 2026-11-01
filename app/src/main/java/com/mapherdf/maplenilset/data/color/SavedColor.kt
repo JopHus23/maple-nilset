@@ -8,5 +8,6 @@ data class SavedColor(
     val name: String,
     val hex: String,
     val sourceType: String,
+    val sourceValue: String? = null,
     val createdAt: Long,
 )

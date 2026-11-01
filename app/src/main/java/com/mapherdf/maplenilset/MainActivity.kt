@@ -51,6 +51,8 @@ import com.mapherdf.maplenilset.ui.settings.CustomSettingsScreen
 import com.mapherdf.maplenilset.ui.settings.NotificationSettingsScreen
 import com.mapherdf.maplenilset.ui.settings.BackgroundCropScreen
 import com.mapherdf.maplenilset.ui.settings.AboutScreen
+import com.mapherdf.maplenilset.ui.color.ColorAddScreen
+import com.mapherdf.maplenilset.ui.color.ColorDetailScreen
 import com.mapherdf.maplenilset.ui.session.ThemeViewModel
 import com.mapherdf.maplenilset.ui.splash.SplashScreen
 import com.mapherdf.maplenilset.ui.theme.ATOMTheme
@@ -197,6 +199,45 @@ class MainActivity : ComponentActivity() {
                                     },
                                     onOpenAbout = {
                                         navController.navigate(AppRoutes.ABOUT)
+                                    },
+                                    onAddColor = {
+                                        navController.navigate(AppRoutes.COLOR_ADD)
+                                    },
+                                    onEditColor = { colorId ->
+                                        navController.navigate(AppRoutes.colorEdit(colorId))
+                                    },
+                                    onViewColor = { colorId ->
+                                        navController.navigate(AppRoutes.colorDetail(colorId))
+                                    },
+                                )
+                            }
+                            composable(AppRoutes.COLOR_ADD) {
+                                ColorAddScreen(
+                                    editId = null,
+                                    onNavigateBack = { navController.popBackStackIfCurrent(AppRoutes.COLOR_ADD) },
+                                )
+                            }
+                            composable(
+                                route = AppRoutes.COLOR_EDIT,
+                                arguments = listOf(navArgument("colorId") { type = NavType.StringType }),
+                            ) { entry ->
+                                ColorAddScreen(
+                                    editId = entry.arguments?.getString("colorId"),
+                                    onNavigateBack = { navController.popBackStackIfCurrent(AppRoutes.COLOR_EDIT) },
+                                )
+                            }
+                            composable(
+                                route = AppRoutes.COLOR_DETAIL,
+                                arguments = listOf(navArgument("colorId") { type = NavType.StringType }),
+                            ) { entry ->
+                                val colorId = entry.arguments?.getString("colorId").orEmpty()
+                                ColorDetailScreen(
+                                    colorId = colorId,
+                                    onNavigateBack = {
+                                        navController.popBackStackIfCurrent(AppRoutes.colorDetail(colorId))
+                                    },
+                                    onEditColor = { id ->
+                                        navController.navigate(AppRoutes.colorEdit(id))
                                     },
                                 )
                             }
