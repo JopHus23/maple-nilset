@@ -36,18 +36,19 @@ fun SplashScreen(
     val color = MaterialTheme.colorScheme.primary
 
     LaunchedEffect(Unit) {
+        delay(300)
         circleProgress.animateTo(
             targetValue = 1f,
-            animationSpec = tween(durationMillis = 550, easing = CubicBezierEasing(0.0f, 0.8f, 0.2f, 1.0f)),
+            animationSpec = tween(durationMillis = 800, easing = CubicBezierEasing(0.0f, 0.8f, 0.2f, 1.0f)),
         )
         slashProgress.animateTo(
             targetValue = 1f,
-            animationSpec = tween(durationMillis = 350, easing = CubicBezierEasing(0.0f, 0.8f, 0.2f, 1.0f)),
+            animationSpec = tween(durationMillis = 600, easing = CubicBezierEasing(0.0f, 0.6f, 0.2f, 1.0f)),
         )
-        delay(500)
+        delay(600)
         exitProgress.animateTo(
             targetValue = 0f,
-            animationSpec = tween(durationMillis = 400),
+            animationSpec = tween(durationMillis = 500),
         )
         onFinished()
     }
@@ -65,7 +66,7 @@ fun SplashScreen(
                     alpha = exitProgress.value
                 },
         ) {
-            val strokeWidth = 5.dp.toPx()
+            val strokeWidth = 9.dp.toPx()
             val radius = (size.minDimension - strokeWidth) / 2f
             val center = Offset(size.width / 2f, size.height / 2f)
 
@@ -95,7 +96,7 @@ fun SplashScreen(
             val slash = slashProgress.value
             if (slash > 0f) {
                 val slashAngle = -45f
-                val slashLength = radius
+                val slashLength = radius * 1.35f
                 val dx = cos(Math.toRadians(slashAngle.toDouble())).toFloat()
                 val dy = sin(Math.toRadians(slashAngle.toDouble())).toFloat()
 
