@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -59,7 +60,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
@@ -122,20 +125,13 @@ fun HomeScreen(
         gesturesEnabled = true,
         scrimColor = MaterialTheme.colorScheme.scrim.copy(alpha = 0.35f),
         drawerContent = {
-            ModalDrawerSheet(
-                modifier = Modifier
-                    .fillMaxWidth(0.80f)
-                    .widthIn(max = 320.dp)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null,
-                    ) {},
-                drawerContainerColor = Color.Transparent,
-                windowInsets = WindowInsets(0),
-            ) {
+            BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                val drawerWidth = minOf(maxWidth * 0.80f, 320.dp)
+                val blankWidth = (maxWidth - drawerWidth).coerceAtLeast(0.dp)
                 Box(
                     modifier = Modifier
-                        .fillMaxSize()
+                        .fillMaxHeight()
+                        .width(drawerWidth)
                         .background(themeDrawerMaskColor()),
                 ) {
                     Column(
@@ -185,6 +181,21 @@ fun HomeScreen(
                             )
                         }
                     }
+                }
+
+                if (drawerState.targetValue == DrawerValue.Open) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .fillMaxHeight()
+                            .width(blankWidth)
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                            ) {
+                                animateDrawer(DrawerValue.Closed)
+                            },
+                    )
                 }
             }
         },
