@@ -33,16 +33,16 @@ fun SplashScreen(
     val circleProgress = remember { Animatable(0f) }
     val slashProgress = remember { Animatable(0f) }
     val exitProgress = remember { Animatable(1f) }
-    val color = MaterialTheme.colorScheme.onBackground
+    val color = MaterialTheme.colorScheme.primary
 
     LaunchedEffect(Unit) {
         circleProgress.animateTo(
             targetValue = 1f,
-            animationSpec = tween(durationMillis = 600, easing = CubicBezierEasing(0.2f, 0f, 0.4f, 1f)),
+            animationSpec = tween(durationMillis = 550, easing = CubicBezierEasing(0.0f, 0.8f, 0.2f, 1.0f)),
         )
         slashProgress.animateTo(
             targetValue = 1f,
-            animationSpec = tween(durationMillis = 300, easing = LinearEasing),
+            animationSpec = tween(durationMillis = 350, easing = CubicBezierEasing(0.0f, 0.8f, 0.2f, 1.0f)),
         )
         delay(500)
         exitProgress.animateTo(
@@ -65,7 +65,7 @@ fun SplashScreen(
                     alpha = exitProgress.value
                 },
         ) {
-            val strokeWidth = 4.dp.toPx()
+            val strokeWidth = 5.dp.toPx()
             val radius = (size.minDimension - strokeWidth) / 2f
             val center = Offset(size.width / 2f, size.height / 2f)
 
