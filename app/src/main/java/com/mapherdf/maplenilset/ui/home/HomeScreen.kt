@@ -168,7 +168,11 @@ fun HomeScreen(
                                 selected = selectedDestination == destination,
                                 shape = MaterialTheme.shapes.extraSmall,
                                 icon = {
-                                    DrawerIcon(destination.iconRes(), destination == selectedDestination)
+                                    DrawerIcon(
+                                        destination.iconRes(),
+                                        destination == selectedDestination,
+                                        destination.brandColor(),
+                                    )
                                 },
                                 onClick = {
                                     selectedDestinationName = destination.name
@@ -285,6 +289,12 @@ private fun HomeDestination.iconRes(): Int = when (this) {
     HomeDestination.LIENZO -> R.drawable.ic_color
 }
 
+private fun HomeDestination.brandColor(): Color? = when (this) {
+    HomeDestination.BILI -> Color(0xFFFB7299)
+    HomeDestination.LIENZO -> Color(0xFF002FA7)
+    else -> null
+}
+
 @Composable
 private fun HomeTextContent(
     viewModel: HomeViewModel = hiltViewModel(),
@@ -368,13 +378,13 @@ private suspend fun DrawerState.openElastic() {
 private fun DrawerIcon(
     iconResource: Int,
     isSelected: Boolean,
-    useBrandColor: Boolean = false,
+    brandColor: Color? = null,
 ) {
     Icon(
         painter = painterResource(iconResource),
         contentDescription = null,
         tint = when {
-            useBrandColor -> Color(0xFFFB7299)
+            brandColor != null -> brandColor
             isSelected -> MaterialTheme.colorScheme.primary
             else -> MaterialTheme.colorScheme.onSurfaceVariant
         },
