@@ -35,6 +35,17 @@ android {
         version = release(37)
     }
 
+    signingConfigs {
+        if (isReleaseSigningConfigured) {
+            create("release") {
+                storeFile = rootProject.file(requireNotNull(releaseStoreFilePath))
+                storePassword = requireNotNull(releaseStorePassword)
+                keyAlias = requireNotNull(releaseKeyAlias)
+                keyPassword = requireNotNull(releaseKeyPassword)
+            }
+        }
+    }
+
     defaultConfig {
         applicationId = "com.mapherdf.maplenilset"
         minSdk = 29
