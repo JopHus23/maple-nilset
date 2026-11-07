@@ -166,10 +166,10 @@ fun themeSidebarSurfaceColor(style: SidebarBlurStyle): Color {
     return MaterialTheme.colorScheme.background.copy(
         alpha = when (style) {
             SidebarBlurStyle.NONE -> 0.82f
-            SidebarBlurStyle.MICA -> 0.46f
-            SidebarBlurStyle.AERO -> 0.24f
-            SidebarBlurStyle.ACRYLIC -> 0.34f
-            SidebarBlurStyle.GAUSSIAN -> 0.30f
+            SidebarBlurStyle.MICA -> 0.88f
+            SidebarBlurStyle.AERO -> 0.86f
+            SidebarBlurStyle.ACRYLIC -> 0.95f
+            SidebarBlurStyle.GAUSSIAN -> 0.97f
         },
     )
 }

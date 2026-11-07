@@ -44,7 +44,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -52,8 +51,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.BlurredEdgeTreatment
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -81,9 +78,7 @@ import com.mapherdf.maplenilset.ui.schedule.ScheduleScreen
 import com.mapherdf.maplenilset.ui.color.LienzoColorScreen
 import com.mapherdf.maplenilset.ui.markdown.MarkdownText
 import com.mapherdf.maplenilset.ui.theme.themeContainerColor
-import com.mapherdf.maplenilset.ui.theme.themeDrawerMaskColor
 import com.mapherdf.maplenilset.ui.theme.themeSidebarSurfaceColor
-import com.mapherdf.maplenilset.ui.theme.blurRadius
 import com.mapherdf.maplenilset.ui.theme.SidebarBlurDecoration
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -91,7 +86,6 @@ import com.mapherdf.maplenilset.ui.theme.SidebarBlurDecoration
 fun HomeScreen(
     isVisible: Boolean,
     sidebarBlurStyle: SidebarBlurStyle = SidebarBlurStyle.NONE,
-    onSidebarBlurActiveChange: (Boolean) -> Unit = {},
     onAddColor: () -> Unit = {},
     onEditColor: (String) -> Unit = {},
     onViewColor: (String) -> Unit = {},
@@ -104,17 +98,6 @@ fun HomeScreen(
     var drawerAnimationJob by remember { mutableStateOf<Job?>(null) }
     var selectedDestinationName by rememberSaveable { mutableStateOf<String?>(null) }
     val visibleDestinations = uiSettings.visiblePages
-    val isDrawerVisible by remember(drawerState) {
-        derivedStateOf {
-            val drawerOffset = drawerState.currentOffset
-            drawerState.targetValue == DrawerValue.Open ||
-                (!drawerOffset.isNaN() && drawerOffset != 0f)
-        }
-    }
-    val isSidebarBlurActive = isDrawerVisible && sidebarBlurStyle != SidebarBlurStyle.NONE
-    LaunchedEffect(isSidebarBlurActive) {
-        onSidebarBlurActiveChange(isSidebarBlurActive)
-    }
     val selectedDestination = selectedDestinationName
         ?.let { name -> runCatching { HomeDestination.valueOf(name) }.getOrNull() }
         ?.takeIf { it in visibleDestinations }
@@ -220,14 +203,6 @@ fun HomeScreen(
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             Scaffold(
-                modifier = if (isSidebarBlurActive) {
-                    Modifier.blur(
-                        radius = sidebarBlurStyle.blurRadius,
-                        edgeTreatment = BlurredEdgeTreatment.Unbounded,
-                    )
-                } else {
-                    Modifier
-                },
                 containerColor = Color.Transparent,
                 topBar = {
                     TopAppBar(

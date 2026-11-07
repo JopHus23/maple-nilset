@@ -49,7 +49,7 @@ fun SidebarBlurDecoration(
     Canvas(modifier = modifier) {
         when (style) {
             SidebarBlurStyle.NONE -> Unit
-            SidebarBlurStyle.MICA -> drawRect(decorationColor.copy(alpha = 0.04f))
+            SidebarBlurStyle.MICA -> drawRect(decorationColor.copy(alpha = 0.07f))
             SidebarBlurStyle.AERO -> {
                 drawRect(
                     brush = Brush.verticalGradient(
@@ -60,7 +60,7 @@ fun SidebarBlurDecoration(
                 )
             }
             SidebarBlurStyle.ACRYLIC -> {
-                drawRect(decorationColor.copy(alpha = 0.05f))
+                drawRect(decorationColor.copy(alpha = 0.08f))
 
                 val cellSize = 9.dp.toPx()
                 val dotRadius = 1.dp.toPx() / 2f

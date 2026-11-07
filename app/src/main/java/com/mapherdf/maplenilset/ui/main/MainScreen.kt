@@ -53,7 +53,6 @@ fun MainScreen(
     onEditColor: (String) -> Unit,
     onViewColor: (String) -> Unit,
     sidebarBlurStyle: SidebarBlurStyle = SidebarBlurStyle.NONE,
-    onSidebarBlurActiveChange: (Boolean) -> Unit = {},
 ) {
     var selectedRoute by rememberSaveable { mutableStateOf(AppRoutes.Tab.HOME) }
     var colorSnackbarBarHeight by remember { mutableIntStateOf(0) }
@@ -86,7 +85,6 @@ fun MainScreen(
                 HomeScreen(
                     isVisible = selectedRoute == AppRoutes.Tab.HOME,
                     sidebarBlurStyle = sidebarBlurStyle,
-                    onSidebarBlurActiveChange = onSidebarBlurActiveChange,
                     onAddColor = onAddColor,
                     onEditColor = onEditColor,
                     onViewColor = onViewColor,
