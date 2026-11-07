@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.Density
 import com.mapherdf.maplenilset.core.theme.ThemeColorFields
 import com.mapherdf.maplenilset.core.theme.ThemeColorParser
 import com.mapherdf.maplenilset.core.theme.ThemeColors
+import com.mapherdf.maplenilset.core.theme.SidebarBlurStyle
 import com.mapherdf.maplenilset.core.theme.UserThemeSettings
 
 fun defaultDarkColorScheme() = darkColorScheme(
@@ -158,6 +159,19 @@ fun themeContainerColor(): Color {
 @Composable
 fun themeDrawerMaskColor(): Color {
     return MaterialTheme.colorScheme.background.copy(alpha = 0.82f)
+}
+
+@Composable
+fun themeSidebarSurfaceColor(style: SidebarBlurStyle): Color {
+    return MaterialTheme.colorScheme.background.copy(
+        alpha = when (style) {
+            SidebarBlurStyle.NONE -> 0.82f
+            SidebarBlurStyle.MICA -> 0.46f
+            SidebarBlurStyle.AERO -> 0.24f
+            SidebarBlurStyle.ACRYLIC -> 0.34f
+            SidebarBlurStyle.GAUSSIAN -> 0.30f
+        },
+    )
 }
 
 @Composable

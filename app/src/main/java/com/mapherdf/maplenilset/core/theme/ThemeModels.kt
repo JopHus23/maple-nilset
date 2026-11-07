@@ -33,6 +33,14 @@ enum class ThemeMode {
     DARK,
 }
 
+enum class SidebarBlurStyle {
+    NONE,
+    MICA,
+    AERO,
+    ACRYLIC,
+    GAUSSIAN,
+}
+
 enum class ThemePreset(
     val id: String,
     val label: String,
@@ -149,6 +157,7 @@ data class UserThemeSettings(
     val uiScaleEnabled: Boolean = false,
     val uiScale: Float = 1f,
     val consoleOutputFontSize: Float = DEFAULT_CONSOLE_OUTPUT_FONT_SIZE,
+    val sidebarBlurStyle: SidebarBlurStyle = SidebarBlurStyle.NONE,
 ) {
     val palette: ThemePreset
         get() = ThemePreset.fromId(paletteId)

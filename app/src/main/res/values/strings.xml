@@ -157,6 +157,12 @@
     <string name="theme_card_opacity">卡片透明度</string>
     <string name="theme_card_opacity_percent">透明度：%1$d%%</string>
     <string name="theme_reset_card_opacity">重置透明度</string>
+    <string name="theme_sidebar_blur">侧边栏模糊</string>
+    <string name="theme_sidebar_blur_normal">普通</string>
+    <string name="theme_sidebar_blur_mica">云母 Mica</string>
+    <string name="theme_sidebar_blur_aero">玻璃 Aero</string>
+    <string name="theme_sidebar_blur_acrylic">亚克力 Acrylic</string>
+    <string name="theme_sidebar_blur_gaussian">高斯模糊</string>
     <string name="theme_display_scaling">显示缩放</string>
     <string name="theme_text_scale">文本缩放</string>
     <string name="theme_ui_scale">UI 缩放</string>

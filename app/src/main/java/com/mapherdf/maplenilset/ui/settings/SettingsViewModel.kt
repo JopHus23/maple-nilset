@@ -6,6 +6,7 @@ import com.mapherdf.maplenilset.core.theme.ThemeColors
 import com.mapherdf.maplenilset.core.theme.ThemeColorFields
 import com.mapherdf.maplenilset.core.theme.ThemeColorParser
 import com.mapherdf.maplenilset.core.theme.ThemeMode
+import com.mapherdf.maplenilset.core.theme.SidebarBlurStyle
 import com.mapherdf.maplenilset.core.theme.UserThemeSettings
 import com.mapherdf.maplenilset.data.repository.ThemeRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -32,6 +33,9 @@ class SettingsViewModel @Inject constructor(
     fun setCardBorders(enabled: Boolean) = launch { themeRepository.setCardBorders(enabled) }
 
     fun setCardMaskOpacity(value: Float) = launch { themeRepository.setCardMaskOpacity(value) }
+
+    fun setSidebarBlurStyle(style: SidebarBlurStyle) =
+        launch { themeRepository.setSidebarBlurStyle(style) }
 
     fun selectPalette(paletteId: String) = launch { themeRepository.selectPalette(paletteId) }
 

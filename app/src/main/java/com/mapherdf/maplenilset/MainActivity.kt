@@ -27,6 +27,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.BlurredEdgeTreatment
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -42,6 +44,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import dagger.hilt.android.AndroidEntryPoint
 import com.mapherdf.maplenilset.const.AppRoutes
+import com.mapherdf.maplenilset.core.theme.SidebarBlurStyle
 import com.mapherdf.maplenilset.ui.console.ConsoleScreen
 import com.mapherdf.maplenilset.ui.console.ConsoleSettingsScreen
 import com.mapherdf.maplenilset.ui.main.MainScreen
@@ -57,6 +60,7 @@ import com.mapherdf.maplenilset.ui.session.ThemeViewModel
 import com.mapherdf.maplenilset.ui.splash.SplashScreen
 import com.mapherdf.maplenilset.ui.theme.ATOMTheme
 import com.mapherdf.maplenilset.ui.theme.rememberCustomBackgroundImage
+import com.mapherdf.maplenilset.ui.theme.blurRadius
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -85,6 +89,7 @@ class MainActivity : ComponentActivity() {
                     val navController = rememberNavController()
                     val startDestination = AppRoutes.MAIN
                     val currentRoute by navController.currentBackStackEntryAsState()
+                    var isSidebarBlurActive by remember { mutableStateOf(false) }
 
                     Box(modifier = Modifier.fillMaxSize()) {
                         val currentDestinationRoute = currentRoute?.destination?.route
@@ -105,7 +110,16 @@ class MainActivity : ComponentActivity() {
                                     contentDescription = null,
                                     contentScale = ContentScale.Crop,
                                     alpha = themeSettings.backgroundOpacity,
-                                    modifier = Modifier.matchParentSize(),
+                                    modifier = if (isSidebarBlurActive) {
+                                        Modifier
+                                            .matchParentSize()
+                                            .blur(
+                                                radius = themeSettings.sidebarBlurStyle.blurRadius,
+                                                edgeTreatment = BlurredEdgeTreatment.Unbounded,
+                                            )
+                                    } else {
+                                        Modifier.matchParentSize()
+                                    },
                                 )
                             }
                         }
@@ -179,6 +193,10 @@ class MainActivity : ComponentActivity() {
                             }
                             composable(AppRoutes.MAIN) {
                                 MainScreen(
+                                    sidebarBlurStyle = themeSettings.sidebarBlurStyle,
+                                    onSidebarBlurActiveChange = { isActive ->
+                                        isSidebarBlurActive = isActive
+                                    },
                                     onOpenConsole = {
                                         navController.navigate(AppRoutes.CONSOLE) {
                                             launchSingleTop = true

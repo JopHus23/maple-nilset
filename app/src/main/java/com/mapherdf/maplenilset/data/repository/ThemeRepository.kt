@@ -32,6 +32,7 @@ import com.mapherdf.maplenilset.core.theme.ThemeColors
 import com.mapherdf.maplenilset.core.theme.ThemeColorParser
 import com.mapherdf.maplenilset.core.theme.ThemeMode
 import com.mapherdf.maplenilset.core.theme.ThemePreset
+import com.mapherdf.maplenilset.core.theme.SidebarBlurStyle
 import com.mapherdf.maplenilset.core.theme.UserThemeSettings
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -107,6 +108,12 @@ class ThemeRepository @Inject constructor(
                     UserThemeSettings.MAX_CARD_MASK_OPACITY,
                 ),
             )
+        }
+    }
+
+    suspend fun setSidebarBlurStyle(style: SidebarBlurStyle) {
+        update { current ->
+            current.copy(sidebarBlurStyle = style)
         }
     }
 

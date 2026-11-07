@@ -52,6 +52,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
@@ -67,8 +68,10 @@ import com.mapherdf.maplenilset.core.theme.ThemeColors
 import com.mapherdf.maplenilset.core.theme.ThemeMode
 import com.mapherdf.maplenilset.core.theme.ThemePreset
 import com.mapherdf.maplenilset.core.theme.UserThemeSettings
+import com.mapherdf.maplenilset.core.theme.SidebarBlurStyle
 import androidx.compose.material3.TopAppBarDefaults
 import com.mapherdf.maplenilset.ui.theme.themeContainerColor
+import com.mapherdf.maplenilset.ui.theme.SidebarBlurPreview
 import com.mapherdf.maplenilset.ui.theme.themeContainerBorderColor
 import kotlinx.coroutines.delay
 
@@ -158,6 +161,30 @@ fun ThemeSettingsScreen(
                     viewModel.setCardMaskOpacity(UserThemeSettings.DEFAULT_CARD_MASK_OPACITY)
                 },
             )
+
+            Text(
+                text = stringResource(R.string.theme_sidebar_blur),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            SidebarBlurStyle.entries.chunked(2).forEach { rowStyles ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    rowStyles.forEach { style ->
+                        SidebarBlurStyleCard(
+                            style = style,
+                            isSelected = settings.sidebarBlurStyle == style,
+                            showBorder = settings.showCardBorders,
+                            onClick = { viewModel.setSidebarBlurStyle(style) },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                    if (rowStyles.size == 1) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
 
             Text(
                 text = stringResource(R.string.theme_palette),
@@ -554,6 +581,86 @@ private fun ThemeCardOpacityControl(
 
 private fun Float.snapToPercentage(): Float {
     return (this * 100).roundToInt() / 100f
+}
+
+@Composable
+private fun SidebarBlurStyleCard(
+    style: SidebarBlurStyle,
+    isSelected: Boolean,
+    showBorder: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        onClick = onClick,
+        modifier = modifier,
+        shape = RoundedCornerShape(8.dp),
+        border = if (showBorder) {
+            BorderStroke(
+                width = 1.dp,
+                color = if (isSelected) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    themeContainerBorderColor()
+                },
+            )
+        } else {
+            null
+        },
+        color = Color.Transparent,
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(74.dp),
+        ) {
+            SidebarBlurPreview(
+                style = style,
+                modifier = Modifier.matchParentSize(),
+            )
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            0f to Color.Transparent,
+                            0.48f to MaterialTheme.colorScheme.background.copy(alpha = 0.12f),
+                            1f to MaterialTheme.colorScheme.background.copy(alpha = 0.82f),
+                        ),
+                    ),
+            )
+            Row(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(style.labelRes()),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                )
+                if (isSelected) {
+                    Text(
+                        text = "✓",
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.labelMedium,
+                    )
+                }
+            }
+        }
+    }
+}
+
+private fun SidebarBlurStyle.labelRes(): Int = when (this) {
+    SidebarBlurStyle.NONE -> R.string.theme_sidebar_blur_normal
+    SidebarBlurStyle.MICA -> R.string.theme_sidebar_blur_mica
+    SidebarBlurStyle.AERO -> R.string.theme_sidebar_blur_aero
+    SidebarBlurStyle.ACRYLIC -> R.string.theme_sidebar_blur_acrylic
+    SidebarBlurStyle.GAUSSIAN -> R.string.theme_sidebar_blur_gaussian
 }
 
 @Composable
