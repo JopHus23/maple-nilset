@@ -4,6 +4,7 @@ import com.mapherdf.maplenilset.data.calendar.CalendarItem
 import com.mapherdf.maplenilset.data.color.ColorConverter
 import com.mapherdf.maplenilset.data.color.SavedColor
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 
 enum class PageTransferMode {
@@ -90,6 +91,57 @@ object ColorPageTransferCodec {
             }
             require(ColorConverter.hexToRgb(color.hex) != null) { "Invalid color hex" }
             require(color.sourceType in sourceTypes) { "Invalid color source type" }
+            require(color.createdAt >= 0L) { "Invalid color created time" }
+        }
+    }
+}
+
+@Serializable
+data class LienzoColorEntry(
+    val id: String,
+    val name: String,
+    val hex: String,
+    val createdAt: Long,
+)
+
+object LienzoColorPaletteCodec {
+
+    private val entryListSerializer = ListSerializer(LienzoColorEntry.serializer())
+
+    fun encode(colors: List<SavedColor>): String = json.encodeToString(
+        entryListSerializer,
+        colors.map { color ->
+            LienzoColorEntry(
+                id = color.id,
+                name = color.name,
+                hex = color.hex,
+                createdAt = color.createdAt,
+            )
+        },
+    )
+
+    fun decode(text: String): List<SavedColor> {
+        val entries = runCatching { json.decodeFromString(entryListSerializer, text) }
+            .getOrNull() ?: throw IllegalArgumentException("Invalid lienzo palette")
+        require(entries.isNotEmpty()) { "Empty lienzo palette" }
+        validateLienzoColors(entries)
+        return entries.map { entry ->
+            SavedColor(
+                id = entry.id,
+                name = entry.name,
+                hex = entry.hex,
+                sourceType = "HEX",
+                sourceValue = null,
+                createdAt = entry.createdAt,
+            )
+        }
+    }
+
+    private fun validateLienzoColors(colors: List<LienzoColorEntry>) {
+        colors.forEach { color ->
+            require(color.id.isNotBlank()) { "Invalid color id" }
+            require(color.name.isNotBlank()) { "Invalid color name" }
+            require(ColorConverter.hexToRgb(color.hex) != null) { "Invalid color hex" }
             require(color.createdAt >= 0L) { "Invalid color created time" }
         }
     }

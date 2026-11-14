@@ -125,6 +125,7 @@ fun HomeScreen(
     val clipboard = LocalClipboardManager.current
     var pendingScheduleImport by remember { mutableStateOf<List<CalendarItem>?>(null) }
     var pendingColorImport by remember { mutableStateOf<List<SavedColor>?>(null) }
+    var showExportJsonDialog by remember { mutableStateOf(false) }
     val transferExportedMessage = stringResource(R.string.page_transfer_exported)
     val transferInvalidMessage = stringResource(R.string.page_transfer_invalid)
     val transferImportedMessage = stringResource(R.string.page_transfer_imported)
@@ -316,6 +317,18 @@ fun HomeScreen(
                                                 pendingColorImport = payload
                                             }
                                         },
+                                        showJsonActions = true,
+                                        onExportJson = { showExportJsonDialog = true },
+                                        onImportJson = {
+                                            val payload = colorViewModel?.parseColorTransferAuto(
+                                                clipboard.getText()?.text.orEmpty(),
+                                            )
+                                            if (payload == null) {
+                                                onTransferMessage(transferInvalidMessage)
+                                            } else {
+                                                pendingColorImport = payload
+                                            }
+                                        },
                                     )
                                 }
                                 else -> Unit
@@ -388,6 +401,26 @@ fun HomeScreen(
                 pendingColorImport = null
                 colorViewModel?.importColors(colors, mode) { isSuccess ->
                     onTransferMessage(if (isSuccess) transferImportedMessage else transferFailedMessage)
+                }
+            },
+        )
+    }
+
+    if (showExportJsonDialog) {
+        HomePageExportJsonDialog(
+            onDismiss = { showExportJsonDialog = false },
+            onConfirm = { isLienzo ->
+                showExportJsonDialog = false
+                val payload = if (isLienzo) {
+                    colorViewModel?.exportColorsAsLienzo()
+                } else {
+                    colorViewModel?.exportColors()
+                }
+                if (payload == null) {
+                    onTransferMessage(transferFailedMessage)
+                } else {
+                    clipboard.setText(buildAnnotatedString { append(payload) })
+                    onTransferMessage(transferExportedMessage)
                 }
             },
         )

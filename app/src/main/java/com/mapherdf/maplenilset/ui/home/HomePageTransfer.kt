@@ -33,6 +33,9 @@ import com.mapherdf.maplenilset.data.transfer.PageTransferMode
 fun HomePageTransferMenu(
     onExport: () -> Unit,
     onImport: () -> Unit,
+    onExportJson: () -> Unit = {},
+    onImportJson: () -> Unit = {},
+    showJsonActions: Boolean = false,
 ) {
     var isMenuExpanded by remember { mutableStateOf(false) }
 
@@ -62,8 +65,62 @@ fun HomePageTransferMenu(
                     onImport()
                 },
             )
+            if (showJsonActions) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.page_transfer_export_json)) },
+                    onClick = {
+                        isMenuExpanded = false
+                        onExportJson()
+                    },
+                )
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.page_transfer_import_json)) },
+                    onClick = {
+                        isMenuExpanded = false
+                        onImportJson()
+                    },
+                )
+            }
         }
     }
+}
+
+@Composable
+fun HomePageExportJsonDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (isLienzo: Boolean) -> Unit,
+) {
+    var isLienzo by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.page_transfer_export_json_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(stringResource(R.string.page_transfer_export_json_message))
+                TransferModeRow(
+                    title = stringResource(R.string.page_transfer_export_style_maple),
+                    isSelected = !isLienzo,
+                    onClick = { isLienzo = false },
+                )
+                TransferModeRow(
+                    title = stringResource(R.string.page_transfer_export_style_lienzo),
+                    isSelected = isLienzo,
+                    onClick = { isLienzo = true },
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancel))
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(isLienzo) }) {
+                Text(stringResource(R.string.page_transfer_confirm))
+            }
+        },
+    )
 }
 
 @Composable

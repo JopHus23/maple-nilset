@@ -15,6 +15,7 @@ import com.mapherdf.maplenilset.data.color.SavedColor
 import com.mapherdf.maplenilset.data.repository.ColorRepository
 import com.mapherdf.maplenilset.data.transfer.ColorPageTransferCodec
 import com.mapherdf.maplenilset.data.transfer.PageTransferMode
+import com.mapherdf.maplenilset.data.transfer.LienzoColorPaletteCodec
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.UUID
 import javax.inject.Inject
@@ -224,9 +225,18 @@ class ColorViewModel @Inject constructor(
         ColorPageTransferCodec.encode(savedColors.value)
     }.getOrNull()
 
+    fun exportColorsAsLienzo(): String? = runCatching {
+        LienzoColorPaletteCodec.encode(savedColors.value)
+    }.getOrNull()
+
     fun parseColorTransfer(text: String): List<SavedColor>? = runCatching {
         ColorPageTransferCodec.decode(text)
     }.getOrNull()
+
+    fun parseColorTransferAuto(text: String): List<SavedColor>? {
+        parseColorTransfer(text)?.let { return it }
+        return runCatching { LienzoColorPaletteCodec.decode(text) }.getOrNull()
+    }
 
     fun importColors(
         colors: List<SavedColor>,
