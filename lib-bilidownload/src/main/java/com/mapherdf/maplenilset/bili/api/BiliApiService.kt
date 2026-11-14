@@ -6,6 +6,7 @@ import kotlinx.serialization.json.Json
 import com.mapherdf.maplenilset.bili.model.BiliPlayUrlData
 import com.mapherdf.maplenilset.bili.model.BiliVideoInfo
 import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 
@@ -15,6 +16,10 @@ class BiliApiService(
 ) {
 
     private val json = Json { ignoreUnknownKeys = true }
+    private val redirectClient = client.newBuilder()
+        .followRedirects(false)
+        .followSslRedirects(false)
+        .build()
 
     suspend fun resolveVideo(bvid: String): BiliVideoInfo = withContext(Dispatchers.IO) {
         val url = "https://api.bilibili.com/x/web-interface/view"
@@ -70,22 +75,35 @@ class BiliApiService(
     }
 
     suspend fun resolveShortLink(code: String): String = withContext(Dispatchers.IO) {
-        var currentUrl = "https://b23.tv/$code"
+        var currentUrl: HttpUrl = "https://b23.tv/$code".toHttpUrl()
         repeat(3) {
             val request = Request.Builder().url(currentUrl).head().build()
-            client.newCall(request).execute().use { response ->
+            redirectClient.newCall(request).execute().use { response ->
                 val location = response.header("location")
+                    ?.let { currentUrl.resolve(it)?.toString() }
                 if (response.isRedirect && location != null) {
-                    val bvMatch = Regex("""BV([0-9A-Za-z]+)""", RegexOption.IGNORE_CASE).find(location)
+                    val bvMatch = Regex("""(?:^|[^0-9A-Za-z])BV([0-9A-Za-z]{10})""", RegexOption.IGNORE_CASE).find(location)
                     if (bvMatch != null) return@withContext "BV${bvMatch.groupValues[1]}"
-                    val avMatch = Regex("""av([0-9]+)""", RegexOption.IGNORE_CASE).find(location)
-                    if (avMatch != null) return@withContext avMatch.groupValues[1]
-                    currentUrl = location
+                    val avMatch = Regex("""(?:^|[^0-9A-Za-z])av([0-9]+)""", RegexOption.IGNORE_CASE).find(location)
+                    if (avMatch != null) return@withContext resolveAidToBvid(avMatch.groupValues[1])
+                    currentUrl = location.toHttpUrl()
                     return@use
                 }
             }
         }
         throw BiliApiException(-1, "Short link could not be resolved")
+    }
+
+    suspend fun resolveAidToBvid(aid: String): String = withContext(Dispatchers.IO) {
+        val url = "https://api.bilibili.com/x/web-interface/view"
+            .toHttpUrl()
+            .newBuilder()
+            .addQueryParameter("aid", aid)
+            .build()
+        val request = jsonRequest(url)
+        executeJson(request) { wrapper ->
+            json.decodeFromJsonElement(BiliVideoInfo.serializer(), wrapper.data ?: throw BiliApiException(-1, "data null"))
+        }.bvid ?: throw BiliApiException(-1, "Upstream response has no bvid")
     }
     private fun jsonRequest(url: okhttp3.HttpUrl): Request =
         Request.Builder()

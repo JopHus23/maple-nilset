@@ -33,6 +33,8 @@ import com.mapherdf.maplenilset.bili.model.BiliAudioQuality
 import com.mapherdf.maplenilset.bili.model.BiliQuality
 import com.mapherdf.maplenilset.bili.model.BiliStreamSelector
 import com.mapherdf.maplenilset.bili.model.BiliVideoReference
+import com.mapherdf.maplenilset.core.bili.BiliContentKind
+import com.mapherdf.maplenilset.core.bili.BiliInputParser
 import com.mapherdf.maplenilset.const.BiliSettings
 import com.mapherdf.maplenilset.data.repository.BiliNilRepository
 import com.mapherdf.maplenilset.di.ApplicationScope
@@ -298,9 +300,16 @@ class BiliVideoViewModel @Inject constructor(
 
     private suspend fun resolveInput(input: String): String {
         val t = input.trim()
-        Regex("""BV([0-9A-Za-z]+)""", RegexOption.IGNORE_CASE).find(t)?.let { return "BV${it.groupValues[1]}" }
-        Regex("""^av([0-9]+)$""", RegexOption.IGNORE_CASE).find(t)?.let { return it.groupValues[1] }
-        Regex("""b23\.tv/([0-9A-Za-z]+)""", RegexOption.IGNORE_CASE).find(t)?.let { return provider.getApi().resolveShortLink(it.groupValues[1]) }
+        BiliInputParser.parseShortLinkCode(t)?.let { code ->
+            return provider.getApi().resolveShortLink(code)
+        }
+        BiliInputParser.parseContent(t)?.let { content ->
+            return when (content.kind) {
+                BiliContentKind.AV -> provider.getApi().resolveAidToBvid(content.id)
+                BiliContentKind.BV -> "BV${content.id}"
+                BiliContentKind.LIVE -> throw IllegalArgumentException("该链接不是视频链接")
+            }
+        }
         return t
     }
 
