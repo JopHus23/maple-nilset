@@ -66,6 +66,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.platform.LocalDensity
 import kotlin.math.roundToInt
 import kotlin.math.abs
@@ -273,16 +274,21 @@ private fun Modifier.pinchGridColumns(
     awaitEachGesture {
         awaitFirstDown(requireUnconsumed = false)
 
+        var pinchLocked = false
         do {
-            val event = awaitPointerEvent()
+            val event = awaitPointerEvent(PointerEventPass.Initial)
             val pressedChanges = event.changes.filter { it.pressed }
 
             if (pressedChanges.size >= 2) {
                 val zoom = event.calculateZoom()
                 if (abs(zoom - 1f) > 0.015f) {
+                    pinchLocked = true
                     onTargetColumns(targetLienzoColorGridColumns(currentColumns(), zoom))
-                    event.changes.forEach { change -> change.consume() }
                 }
+            }
+
+            if (pinchLocked) {
+                event.changes.forEach { change -> change.consume() }
             }
 
             if (event.changes.none { it.pressed }) {
