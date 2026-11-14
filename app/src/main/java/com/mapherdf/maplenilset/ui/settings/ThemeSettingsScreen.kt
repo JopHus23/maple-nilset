@@ -149,42 +149,6 @@ fun ThemeSettingsScreen(
                 settings = settings,
                 onModeChange = viewModel::setThemeMode,
             )
-            ThemeCardBorderToggle(
-                settings = settings,
-                onChange = viewModel::setCardBorders,
-            )
-            ThemeCardOpacityControl(
-                opacity = settings.cardMaskOpacity,
-                showBorder = settings.showCardBorders,
-                onOpacityChange = viewModel::setCardMaskOpacity,
-                onReset = {
-                    viewModel.setCardMaskOpacity(UserThemeSettings.DEFAULT_CARD_MASK_OPACITY)
-                },
-            )
-
-            Text(
-                text = stringResource(R.string.theme_sidebar_blur),
-                style = MaterialTheme.typography.titleMedium,
-            )
-            SidebarBlurStyle.entries.chunked(2).forEach { rowStyles ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    rowStyles.forEach { style ->
-                        SidebarBlurStyleCard(
-                            style = style,
-                            isSelected = settings.sidebarBlurStyle == style,
-                            showBorder = settings.showCardBorders,
-                            onClick = { viewModel.setSidebarBlurStyle(style) },
-                            modifier = Modifier.weight(1f),
-                        )
-                    }
-                    if (rowStyles.size == 1) {
-                        Spacer(modifier = Modifier.weight(1f))
-                    }
-                }
-            }
 
             Text(
                 text = stringResource(R.string.theme_palette),
@@ -231,6 +195,47 @@ fun ThemeSettingsScreen(
             }
 
             Text(
+                text = stringResource(R.string.theme_card_effects),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            ThemeCardBorderToggle(
+                settings = settings,
+                onChange = viewModel::setCardBorders,
+            )
+            ThemeCardOpacityControl(
+                opacity = settings.cardMaskOpacity,
+                showBorder = settings.showCardBorders,
+                onOpacityChange = viewModel::setCardMaskOpacity,
+                onReset = {
+                    viewModel.setCardMaskOpacity(UserThemeSettings.DEFAULT_CARD_MASK_OPACITY)
+                },
+            )
+
+            Text(
+                text = stringResource(R.string.theme_sidebar_blur),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            SidebarBlurStyle.entries.chunked(2).forEach { rowStyles ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    rowStyles.forEach { style ->
+                        SidebarBlurStyleCard(
+                            style = style,
+                            isSelected = settings.sidebarBlurStyle == style,
+                            showBorder = settings.showCardBorders,
+                            onClick = { viewModel.setSidebarBlurStyle(style) },
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                    if (rowStyles.size == 1) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
+
+            Text(
                 text = stringResource(R.string.theme_display_scaling),
                 style = MaterialTheme.typography.titleMedium,
             )
@@ -259,6 +264,10 @@ fun ThemeSettingsScreen(
                     viewModel.setUiScaleEnabled(false)
                     viewModel.setUiScale(UserThemeSettings.DEFAULT_SCALE)
                 },
+            )
+            Text(
+                text = stringResource(R.string.theme_custom),
+                style = MaterialTheme.typography.titleMedium,
             )
             ThemeCustomFontCard(
                 settings = settings,
