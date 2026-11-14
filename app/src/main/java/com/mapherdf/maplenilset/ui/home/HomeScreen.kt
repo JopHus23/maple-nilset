@@ -340,6 +340,8 @@ fun HomeScreen(
                             onViewColor = onViewColor,
                             onCopyMessage = onColorCopy,
                             viewMode = uiSettings.lienzoColorView,
+                            gridColumns = uiSettings.lienzoColorGridColumns,
+                            onGridColumnsChange = customViewModel::setLienzoColorGridColumns,
                         )
                         HomeDestination.HOME -> HomeTextContent()
                         HomeDestination.NOTE -> PlaceholderDestinationContent(

@@ -16,6 +16,9 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items as gridItems
@@ -34,8 +37,12 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,8 +65,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import kotlin.math.roundToInt
+import kotlin.math.abs
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mapherdf.maplenilset.R
@@ -68,6 +77,7 @@ import com.mapherdf.maplenilset.data.color.ColorName
 import com.mapherdf.maplenilset.data.color.RgbColor
 import com.mapherdf.maplenilset.data.color.SavedColor
 import com.mapherdf.maplenilset.core.navigation.LienzoColorView
+import com.mapherdf.maplenilset.core.navigation.targetLienzoColorGridColumns
 import com.mapherdf.maplenilset.ui.theme.themeContainerBorderColor
 import com.mapherdf.maplenilset.ui.theme.themeContainerColor
 
@@ -79,6 +89,8 @@ fun LienzoColorScreen(
     onViewColor: (String) -> Unit,
     onCopyMessage: (String) -> Unit,
     viewMode: LienzoColorView,
+    gridColumns: Int,
+    onGridColumnsChange: (Int) -> Unit,
     viewModel: ColorViewModel = hiltViewModel(),
 ) {
     val savedColors by viewModel.savedColors.collectAsStateWithLifecycle()
@@ -86,6 +98,25 @@ fun LienzoColorScreen(
     val clipboard = LocalClipboardManager.current
     var selectedColorId by remember { mutableStateOf<String?>(null) }
     var pendingDeleteId by remember { mutableStateOf<String?>(null) }
+    var pinchColumns by remember { mutableIntStateOf(gridColumns) }
+    val latestSavedColumns by rememberUpdatedState(gridColumns)
+    val latestPinchColumns by rememberUpdatedState(pinchColumns)
+    val animatedGridColumns by animateIntAsState(
+        targetValue = pinchColumns,
+        animationSpec = tween(durationMillis = 180),
+        label = "lienzoGridColumns",
+    )
+
+    LaunchedEffect(gridColumns) {
+        pinchColumns = gridColumns
+    }
+
+    LaunchedEffect(pinchColumns, gridColumns) {
+        if (pinchColumns != gridColumns) {
+            delay(240)
+            onGridColumnsChange(pinchColumns)
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -128,37 +159,43 @@ fun LienzoColorScreen(
             }
         } else if (viewMode == LienzoColorView.GRID) {
             LazyVerticalGrid(
-                columns = GridCells.Adaptive(minSize = 148.dp),
+                columns = GridCells.Fixed(animatedGridColumns),
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding),
+                    .padding(innerPadding)
+                    .pinchGridColumns(
+                        currentColumns = { latestPinchColumns },
+                        onTargetColumns = { pinchColumns = it },
+                    ),
                 contentPadding = PaddingValues(start = 12.dp, top = 8.dp, end = 12.dp, bottom = 76.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 gridItems(savedColors, key = { it.id }) { savedColor ->
-                    SavedColorTile(
-                        savedColor = savedColor,
-                        isActionMenuVisible = selectedColorId == savedColor.id,
-                        onClick = {
-                            selectedColorId = null
-                            onViewColor(savedColor.id)
-                        },
-                        onLongClick = { selectedColorId = savedColor.id },
-                        onDismissAction = { selectedColorId = null },
-                        onEdit = {
-                            selectedColorId = null
-                            onEditColor(savedColor.id)
-                        },
-                        onDelete = {
-                            selectedColorId = null
-                            pendingDeleteId = savedColor.id
-                        },
-                        onCopy = {
-                            clipboard.setText(AnnotatedString(viewModel.colorInfo(savedColor)))
-                            onCopyMessage(copiedMessage)
-                        },
-                    )
+                    Box(modifier = Modifier.animateItem()) {
+                        SavedColorTile(
+                            savedColor = savedColor,
+                            isActionMenuVisible = selectedColorId == savedColor.id,
+                            onClick = {
+                                selectedColorId = null
+                                onViewColor(savedColor.id)
+                            },
+                            onLongClick = { selectedColorId = savedColor.id },
+                            onDismissAction = { selectedColorId = null },
+                            onEdit = {
+                                selectedColorId = null
+                                onEditColor(savedColor.id)
+                            },
+                            onDelete = {
+                                selectedColorId = null
+                                pendingDeleteId = savedColor.id
+                            },
+                            onCopy = {
+                                clipboard.setText(AnnotatedString(viewModel.colorInfo(savedColor)))
+                                onCopyMessage(copiedMessage)
+                            },
+                        )
+                    }
                 }
             }
         } else {
@@ -226,6 +263,32 @@ fun LienzoColorScreen(
                 TextButton(onClick = { pendingDeleteId = null }) { Text(cancel) }
             },
         )
+    }
+}
+
+private fun Modifier.pinchGridColumns(
+    currentColumns: () -> Int,
+    onTargetColumns: (Int) -> Unit,
+): Modifier = pointerInput(Unit) {
+    awaitEachGesture {
+        awaitFirstDown(requireUnconsumed = false)
+
+        do {
+            val event = awaitPointerEvent()
+            val pressedChanges = event.changes.filter { it.pressed }
+
+            if (pressedChanges.size >= 2) {
+                val zoom = event.calculateZoom()
+                if (abs(zoom - 1f) > 0.015f) {
+                    onTargetColumns(targetLienzoColorGridColumns(currentColumns(), zoom))
+                    event.changes.forEach { change -> change.consume() }
+                }
+            }
+
+            if (event.changes.none { it.pressed }) {
+                break
+            }
+        } while (true)
     }
 }
 

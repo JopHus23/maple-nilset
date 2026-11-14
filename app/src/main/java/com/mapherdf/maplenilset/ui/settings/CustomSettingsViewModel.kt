@@ -38,6 +38,9 @@ class CustomSettingsViewModel @Inject constructor(
     fun setLienzoColorView(view: LienzoColorView) =
         launch { uiSettingsRepository.setLienzoColorView(view) }
 
+    fun setLienzoColorGridColumns(columns: Int) =
+        launch { uiSettingsRepository.setLienzoColorGridColumns(columns) }
+
     fun resetUiSettings() =
         launch { uiSettingsRepository.reset() }
 

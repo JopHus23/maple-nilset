@@ -9,6 +9,9 @@ import com.mapherdf.maplenilset.const.LocalStoreKeys
 import com.mapherdf.maplenilset.core.navigation.HomeDestination
 import com.mapherdf.maplenilset.core.navigation.HomeDestinationMove
 import com.mapherdf.maplenilset.core.navigation.LienzoColorView
+import com.mapherdf.maplenilset.core.navigation.MAX_LIENZO_COLOR_GRID_COLUMNS
+import com.mapherdf.maplenilset.core.navigation.MIN_LIENZO_COLOR_GRID_COLUMNS
+import com.mapherdf.maplenilset.core.navigation.DEFAULT_LIENZO_COLOR_GRID_COLUMNS
 import com.mapherdf.maplenilset.core.navigation.UserUiSettings
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -28,6 +31,8 @@ interface UiSettingsRepository {
     suspend fun setPageVisible(page: HomeDestination, visible: Boolean)
 
     suspend fun setLienzoColorView(view: LienzoColorView)
+
+    suspend fun setLienzoColorGridColumns(columns: Int)
 
     suspend fun reset()
 }
@@ -102,6 +107,17 @@ class LocalUiSettingsRepository @Inject constructor(
         update { current -> current.copy(lienzoColorView = view) }
     }
 
+    override suspend fun setLienzoColorGridColumns(columns: Int) {
+        update { current ->
+            current.copy(
+                lienzoColorGridColumns = columns.coerceIn(
+                    MIN_LIENZO_COLOR_GRID_COLUMNS,
+                    MAX_LIENZO_COLOR_GRID_COLUMNS,
+                ),
+            )
+        }
+    }
+
     private suspend fun update(transform: (UserUiSettings) -> UserUiSettings) {
         dataStore.edit { preferences ->
             val current = decode(preferences[key]) ?: UserUiSettings()
@@ -143,6 +159,10 @@ class LocalUiSettingsRepository @Inject constructor(
             hiddenPages = adjustedHiddenPages,
             startupPage = startupPage,
             lienzoColorView = lienzoColorView,
+            lienzoColorGridColumns = lienzoColorGridColumns.coerceIn(
+                MIN_LIENZO_COLOR_GRID_COLUMNS,
+                MAX_LIENZO_COLOR_GRID_COLUMNS,
+            ),
         )
     }
 }
