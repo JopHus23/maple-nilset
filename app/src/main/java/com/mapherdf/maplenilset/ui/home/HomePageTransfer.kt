@@ -117,7 +117,7 @@ fun HomePageExportJsonDialog(
         },
         confirmButton = {
             TextButton(onClick = { onConfirm(isLienzo) }) {
-                Text(stringResource(R.string.page_transfer_confirm))
+                Text(stringResource(R.string.page_transfer_export_json_confirm))
             }
         },
     )
