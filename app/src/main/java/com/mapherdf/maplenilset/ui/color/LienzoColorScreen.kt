@@ -80,7 +80,6 @@ import com.mapherdf.maplenilset.data.color.RgbColor
 import com.mapherdf.maplenilset.data.color.SavedColor
 import com.mapherdf.maplenilset.core.navigation.LienzoColorView
 import com.mapherdf.maplenilset.core.navigation.targetLienzoColorGridColumns
-import com.mapherdf.maplenilset.core.navigation.MAX_LIENZO_COLOR_GRID_COLUMNS
 import com.mapherdf.maplenilset.ui.theme.themeContainerBorderColor
 import com.mapherdf.maplenilset.ui.theme.themeContainerColor
 
@@ -185,7 +184,7 @@ fun LienzoColorScreen(
                     Box(modifier = Modifier.animateItem()) {
                         SavedColorTile(
                             savedColor = savedColor,
-                            showLabels = animatedGridColumns < MAX_LIENZO_COLOR_GRID_COLUMNS,
+                            showChrome = animatedGridColumns < 5,
                             isActionMenuVisible = selectedColorId == savedColor.id,
                             onClick = {
                                 selectedColorId = null
@@ -323,7 +322,7 @@ private fun Modifier.pinchGridColumns(
 @Composable
 private fun SavedColorTile(
     savedColor: SavedColor,
-    showLabels: Boolean,
+    showChrome: Boolean,
     isActionMenuVisible: Boolean,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
@@ -355,25 +354,27 @@ private fun SavedColorTile(
                     .fillMaxSize()
                     .background(tileColor),
             )
-            Surface(
-                onClick = onCopy,
-                shape = RoundedCornerShape(8.dp),
-                color = Color.Transparent,
-                contentColor = foregroundColor,
-                modifier = Modifier
-                    .align(if (showLabels) Alignment.TopEnd else Alignment.Center)
-                    .padding(4.dp)
-                    .size(34.dp),
-            ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_copy),
-                        contentDescription = stringResource(R.string.lienzo_color_copied),
-                        modifier = Modifier.size(18.dp),
-                    )
+            if (showChrome) {
+                Surface(
+                    onClick = onCopy,
+                    shape = RoundedCornerShape(8.dp),
+                    color = Color.Transparent,
+                    contentColor = foregroundColor,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(4.dp)
+                        .size(34.dp),
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_copy),
+                            contentDescription = stringResource(R.string.lienzo_color_copied),
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
                 }
             }
-            if (showLabels) {
+            if (showChrome) {
                 Column(
                     modifier = Modifier
                         .align(Alignment.BottomStart)
@@ -400,6 +401,7 @@ private fun SavedColorTile(
 
         if (isActionMenuVisible) {
             ColorCardActionMenu(
+                onCopy = onCopy,
                 onEdit = onEdit,
                 onDelete = onDelete,
                 onDismiss = onDismissAction,
@@ -490,6 +492,7 @@ private fun SavedColorCard(
 
         if (isActionMenuVisible) {
             ColorCardActionMenu(
+                onCopy = onCopy,
                 onEdit = onEdit,
                 onDelete = onDelete,
                 onDismiss = onDismissAction,
@@ -500,6 +503,7 @@ private fun SavedColorCard(
 
 @Composable
 private fun ColorCardActionMenu(
+    onCopy: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onDismiss: () -> Unit,
@@ -514,6 +518,13 @@ private fun ColorCardActionMenu(
         properties = PopupProperties(focusable = true),
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            ColorActionButton(
+                color = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                iconRes = R.drawable.ic_copy,
+                contentDescription = stringResource(R.string.lienzo_color_copied),
+                onClick = onCopy,
+            )
             ColorActionButton(
                 color = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
