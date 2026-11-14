@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mapherdf.maplenilset.core.navigation.HomeDestination
 import com.mapherdf.maplenilset.core.navigation.HomeDestinationMove
+import com.mapherdf.maplenilset.core.navigation.LienzoColorView
 import com.mapherdf.maplenilset.core.navigation.UserUiSettings
 import com.mapherdf.maplenilset.data.repository.UiSettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -33,6 +34,9 @@ class CustomSettingsViewModel @Inject constructor(
 
     fun setPageVisible(page: HomeDestination, visible: Boolean) =
         launch { uiSettingsRepository.setPageVisible(page, visible) }
+
+    fun setLienzoColorView(view: LienzoColorView) =
+        launch { uiSettingsRepository.setLienzoColorView(view) }
 
     fun resetUiSettings() =
         launch { uiSettingsRepository.reset() }

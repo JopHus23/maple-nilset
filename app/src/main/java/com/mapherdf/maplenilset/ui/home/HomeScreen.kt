@@ -75,6 +75,7 @@ import com.mapherdf.maplenilset.data.calendar.CalendarItem
 import com.mapherdf.maplenilset.data.color.SavedColor
 import com.mapherdf.maplenilset.data.transfer.PageTransferMode
 import com.mapherdf.maplenilset.core.theme.SidebarBlurStyle
+import com.mapherdf.maplenilset.core.navigation.LienzoColorView
 import com.mapherdf.maplenilset.ui.settings.CustomSettingsViewModel
 import com.mapherdf.maplenilset.ui.calendar.CalendarScreen
 import com.mapherdf.maplenilset.ui.bili.BiliNilScreen
@@ -266,27 +267,57 @@ fun HomeScreen(
                                         }
                                     },
                                 )
-                                HomeDestination.LIENZO -> HomePageTransferMenu(
-                                    onExport = {
-                                        val payload = colorViewModel?.exportColors()
-                                        if (payload == null) {
-                                            onTransferMessage(transferFailedMessage)
+                                HomeDestination.LIENZO -> {
+                                    IconButton(
+                                    onClick = {
+                                        val nextView = if (uiSettings.lienzoColorView == LienzoColorView.LIST) {
+                                            LienzoColorView.GRID
                                         } else {
-                                            clipboard.setText(buildAnnotatedString { append(payload) })
-                                            onTransferMessage(transferExportedMessage)
+                                            LienzoColorView.LIST
                                         }
+                                        customViewModel.setLienzoColorView(nextView)
                                     },
-                                    onImport = {
-                                        val payload = colorViewModel?.parseColorTransfer(
-                                            clipboard.getText()?.text.orEmpty(),
-                                        )
-                                        if (payload == null) {
-                                            onTransferMessage(transferInvalidMessage)
+                                ) {
+                                    val viewIcon = if (uiSettings.lienzoColorView == LienzoColorView.LIST) {
+                                        R.drawable.ic_listview
+                                    } else {
+                                        R.drawable.ic_gridview
+                                    }
+                                    val viewDescription = stringResource(
+                                        if (uiSettings.lienzoColorView == LienzoColorView.LIST) {
+                                            R.string.lienzo_color_view_list
                                         } else {
-                                            pendingColorImport = payload
-                                        }
-                                    },
-                                )
+                                            R.string.lienzo_color_view_grid
+                                        },
+                                    )
+                                    Icon(
+                                        painter = painterResource(viewIcon),
+                                        contentDescription = viewDescription,
+                                        tint = MaterialTheme.colorScheme.onSurface,
+                                    )
+                                }
+                                    HomePageTransferMenu(
+                                        onExport = {
+                                            val payload = colorViewModel?.exportColors()
+                                            if (payload == null) {
+                                                onTransferMessage(transferFailedMessage)
+                                            } else {
+                                                clipboard.setText(buildAnnotatedString { append(payload) })
+                                                onTransferMessage(transferExportedMessage)
+                                            }
+                                        },
+                                        onImport = {
+                                            val payload = colorViewModel?.parseColorTransfer(
+                                                clipboard.getText()?.text.orEmpty(),
+                                            )
+                                            if (payload == null) {
+                                                onTransferMessage(transferInvalidMessage)
+                                            } else {
+                                                pendingColorImport = payload
+                                            }
+                                        },
+                                    )
+                                }
                                 else -> Unit
                             }
                         },
@@ -308,6 +339,7 @@ fun HomeScreen(
                             onEditColor = onEditColor,
                             onViewColor = onViewColor,
                             onCopyMessage = onColorCopy,
+                            viewMode = uiSettings.lienzoColorView,
                         )
                         HomeDestination.HOME -> HomeTextContent()
                         HomeDestination.NOTE -> PlaceholderDestinationContent(

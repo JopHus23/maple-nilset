@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import com.mapherdf.maplenilset.const.LocalStoreKeys
 import com.mapherdf.maplenilset.core.navigation.HomeDestination
 import com.mapherdf.maplenilset.core.navigation.HomeDestinationMove
+import com.mapherdf.maplenilset.core.navigation.LienzoColorView
 import com.mapherdf.maplenilset.core.navigation.UserUiSettings
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -25,6 +26,8 @@ interface UiSettingsRepository {
     suspend fun movePage(page: HomeDestination, direction: HomeDestinationMove)
 
     suspend fun setPageVisible(page: HomeDestination, visible: Boolean)
+
+    suspend fun setLienzoColorView(view: LienzoColorView)
 
     suspend fun reset()
 }
@@ -95,6 +98,10 @@ class LocalUiSettingsRepository @Inject constructor(
         update { UserUiSettings() }
     }
 
+    override suspend fun setLienzoColorView(view: LienzoColorView) {
+        update { current -> current.copy(lienzoColorView = view) }
+    }
+
     private suspend fun update(transform: (UserUiSettings) -> UserUiSettings) {
         dataStore.edit { preferences ->
             val current = decode(preferences[key]) ?: UserUiSettings()
@@ -135,6 +142,7 @@ class LocalUiSettingsRepository @Inject constructor(
             pageOrder = order,
             hiddenPages = adjustedHiddenPages,
             startupPage = startupPage,
+            lienzoColorView = lienzoColorView,
         )
     }
 }

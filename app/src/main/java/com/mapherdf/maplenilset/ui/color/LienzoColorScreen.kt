@@ -15,6 +15,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -42,6 +46,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -61,6 +67,7 @@ import com.mapherdf.maplenilset.data.color.ColorConverter
 import com.mapherdf.maplenilset.data.color.ColorName
 import com.mapherdf.maplenilset.data.color.RgbColor
 import com.mapherdf.maplenilset.data.color.SavedColor
+import com.mapherdf.maplenilset.core.navigation.LienzoColorView
 import com.mapherdf.maplenilset.ui.theme.themeContainerBorderColor
 import com.mapherdf.maplenilset.ui.theme.themeContainerColor
 
@@ -71,6 +78,7 @@ fun LienzoColorScreen(
     onEditColor: (String) -> Unit,
     onViewColor: (String) -> Unit,
     onCopyMessage: (String) -> Unit,
+    viewMode: LienzoColorView,
     viewModel: ColorViewModel = hiltViewModel(),
 ) {
     val savedColors by viewModel.savedColors.collectAsStateWithLifecycle()
@@ -115,6 +123,41 @@ fun LienzoColorScreen(
                         text = stringResource(R.string.lienzo_color_empty),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        } else if (viewMode == LienzoColorView.GRID) {
+            LazyVerticalGrid(
+                columns = GridCells.Adaptive(minSize = 148.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentPadding = PaddingValues(start = 12.dp, top = 8.dp, end = 12.dp, bottom = 76.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                gridItems(savedColors, key = { it.id }) { savedColor ->
+                    SavedColorTile(
+                        savedColor = savedColor,
+                        isActionMenuVisible = selectedColorId == savedColor.id,
+                        onClick = {
+                            selectedColorId = null
+                            onViewColor(savedColor.id)
+                        },
+                        onLongClick = { selectedColorId = savedColor.id },
+                        onDismissAction = { selectedColorId = null },
+                        onEdit = {
+                            selectedColorId = null
+                            onEditColor(savedColor.id)
+                        },
+                        onDelete = {
+                            selectedColorId = null
+                            pendingDeleteId = savedColor.id
+                        },
+                        onCopy = {
+                            clipboard.setText(AnnotatedString(viewModel.colorInfo(savedColor)))
+                            onCopyMessage(copiedMessage)
+                        },
                     )
                 }
             }
@@ -183,6 +226,97 @@ fun LienzoColorScreen(
                 TextButton(onClick = { pendingDeleteId = null }) { Text(cancel) }
             },
         )
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun SavedColorTile(
+    savedColor: SavedColor,
+    isActionMenuVisible: Boolean,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+    onDismissAction: () -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+    onCopy: () -> Unit,
+) {
+    val rgb = ColorConverter.hexToRgb(savedColor.hex)
+
+    Surface(
+        shape = RoundedCornerShape(8.dp),
+        color = themeContainerColor(),
+        border = androidx.compose.foundation.BorderStroke(1.dp, themeContainerBorderColor()),
+        modifier = Modifier
+            .fillMaxWidth()
+            .aspectRatio(1f)
+            .combinedClickable(onClick = onClick, onLongClick = onLongClick),
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        rgb?.let { Color(it.r, it.g, it.b) } ?: MaterialTheme.colorScheme.surfaceVariant,
+                    ),
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.58f)),
+                        ),
+                    ),
+            )
+            Surface(
+                onClick = onCopy,
+                shape = RoundedCornerShape(8.dp),
+                color = Color.Transparent,
+                contentColor = Color.White,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(4.dp)
+                    .size(34.dp),
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_copy),
+                        contentDescription = stringResource(R.string.lienzo_color_copied),
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+            }
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .fillMaxWidth()
+                    .padding(horizontal = 10.dp, vertical = 8.dp),
+            ) {
+                Text(
+                    text = savedColor.name,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = Color.White,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = savedColor.hex,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.White.copy(alpha = 0.84f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+
+        if (isActionMenuVisible) {
+            ColorCardActionMenu(
+                onEdit = onEdit,
+                onDelete = onDelete,
+                onDismiss = onDismissAction,
+            )
+        }
     }
 }
 

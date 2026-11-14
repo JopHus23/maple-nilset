@@ -42,8 +42,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -308,7 +311,7 @@ private fun InfoCard(
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
             ) {
                 Text(
-                    text = value,
+                    text = highlightedColorValue(value),
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.weight(1f),
                 )
@@ -333,6 +336,28 @@ private fun InfoCard(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+        }
+    }
+}
+
+@Composable
+private fun highlightedColorValue(value: String): AnnotatedString {
+    val valueStyle = SpanStyle(
+        color = MaterialTheme.colorScheme.primary,
+        fontWeight = FontWeight.SemiBold,
+    )
+
+    return buildAnnotatedString {
+        var lastIndex = 0
+        colorValueRegex.findAll(value).forEach { match ->
+            if (match.range.first > lastIndex) {
+                append(value.substring(lastIndex, match.range.first))
+            }
+            withStyle(valueStyle) { append(match.value) }
+            lastIndex = match.range.last + 1
+        }
+        if (lastIndex < value.length) {
+            append(value.substring(lastIndex))
         }
     }
 }
@@ -511,3 +536,5 @@ private fun formatValue(value: Double, digits: Int = 1): String {
         String.format("%.${digits}f", value)
     }
 }
+
+private val colorValueRegex = Regex("#[0-9A-Fa-f]{6}|[0-9]+(?:\\.\\d+)?%?")

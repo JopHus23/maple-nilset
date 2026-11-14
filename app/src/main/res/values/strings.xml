@@ -291,4 +291,6 @@
     <string name="page_transfer_confirm">确认导入</string>
     <string name="page_transfer_imported">导入成功</string>
     <string name="page_transfer_failed">导入失败，请重试</string>
+    <string name="lienzo_color_view_list">当前为列表视图，点击切换为平铺视图</string>
+    <string name="lienzo_color_view_grid">当前为平铺视图，点击切换为列表视图</string>
 </resources>

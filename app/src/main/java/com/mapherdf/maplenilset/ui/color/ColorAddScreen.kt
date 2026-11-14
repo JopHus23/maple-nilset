@@ -3,6 +3,7 @@ package com.mapherdf.maplenilset.ui.color
 import android.content.ClipboardManager
 import android.content.Context
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -43,10 +44,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -79,6 +83,7 @@ fun ColorAddScreen(
     val isSavingColor by viewModel.isSavingColor.collectAsStateWithLifecycle()
     val editingColor = editId?.let { id -> savedColors.find { it.id == id } }
     val rgb = parseResult?.rgb
+    val isInvalidInput = inputValue.isNotBlank() && parseResult == null
     val nameEntry = rgb?.let { viewModel.colorName(it) }
     val context = LocalContext.current
     val clipboardManager = remember {
@@ -186,6 +191,7 @@ fun ColorAddScreen(
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 shape = RoundedCornerShape(8.dp),
+                isError = isInvalidInput,
             )
             Text(
                 text = formatHint(selectedFormat),
@@ -201,11 +207,28 @@ fun ColorAddScreen(
                     modifier = Modifier
                         .size(48.dp)
                         .clip(RoundedCornerShape(8.dp))
-                        .background(
-                            rgb?.let { Color(it.r, it.g, it.b) } ?: MaterialTheme.colorScheme.surfaceVariant,
-                        )
                         .border(BorderStroke(1.dp, themeContainerBorderColor()), RoundedCornerShape(8.dp)),
-                )
+                ) {
+                    if (isInvalidInput) {
+                        InvalidColorPreview(modifier = Modifier.fillMaxSize())
+                        Text(
+                            text = "undefined",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            modifier = Modifier.align(Alignment.Center),
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(
+                                    rgb?.let { Color(it.r, it.g, it.b) }
+                                        ?: MaterialTheme.colorScheme.surfaceVariant,
+                                ),
+                        )
+                    }
+                }
                 if (nameEntry != null) {
                     Column {
                         Text(
@@ -386,6 +409,27 @@ private fun FormatTab(
                 MaterialTheme.colorScheme.onSurfaceVariant
             },
         )
+    }
+}
+
+@Composable
+private fun InvalidColorPreview(modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val cellSize = 8.dp.toPx()
+        val columnCount = (size.width / cellSize).toInt() + 1
+        val rowCount = (size.height / cellSize).toInt() + 1
+        val magenta = Color(0xFFF800F8)
+        val black = Color.Black
+
+        for (row in 0 until rowCount) {
+            for (column in 0 until columnCount) {
+                drawRect(
+                    color = if ((row + column) % 2 == 0) magenta else black,
+                    topLeft = Offset(x = column * cellSize, y = row * cellSize),
+                    size = Size(width = cellSize, height = cellSize),
+                )
+            }
+        }
     }
 }
 
