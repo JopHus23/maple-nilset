@@ -275,7 +275,7 @@ class ColorViewModel @Inject constructor(
     }
 
     private val SavedColor.transferIdentity: String
-        get() = listOf(name, hex, sourceType, sourceValue.orEmpty()).joinToString("\u0000")
+        get() = listOf(name, hex).joinToString("\u0000")
 
     private fun parseRgb(input: String): RgbColor? {
         val numbers = extractNumbers(input)
