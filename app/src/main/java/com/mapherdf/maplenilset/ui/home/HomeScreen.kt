@@ -1,5 +1,8 @@
 package com.mapherdf.maplenilset.ui.home
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
@@ -54,6 +57,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
@@ -69,6 +73,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import com.mapherdf.maplenilset.R
 import com.mapherdf.maplenilset.core.navigation.HomeDestination
 import com.mapherdf.maplenilset.data.calendar.CalendarItem
@@ -98,6 +105,7 @@ fun HomeScreen(
     onViewColor: (String) -> Unit = {},
     onColorCopy: (String) -> Unit = {},
     onTransferMessage: (String) -> Unit = {},
+    onTransferFileExported: (Uri) -> Unit = {},
 ) {
     val customViewModel: CustomSettingsViewModel = hiltViewModel()
     val uiSettings by customViewModel.uiSettings.collectAsStateWithLifecycle()
@@ -126,10 +134,31 @@ fun HomeScreen(
     var pendingScheduleImport by remember { mutableStateOf<List<CalendarItem>?>(null) }
     var pendingColorImport by remember { mutableStateOf<List<SavedColor>?>(null) }
     var showExportJsonDialog by remember { mutableStateOf(false) }
+    var pendingExportPayload by rememberSaveable { mutableStateOf<String?>(null) }
     val transferExportedMessage = stringResource(R.string.page_transfer_exported)
     val transferInvalidMessage = stringResource(R.string.page_transfer_invalid)
     val transferImportedMessage = stringResource(R.string.page_transfer_imported)
     val transferFailedMessage = stringResource(R.string.page_transfer_failed)
+    val context = LocalContext.current
+    val exportJsonLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/json"),
+    ) { uri ->
+        val payload = pendingExportPayload
+        pendingExportPayload = null
+        if (uri != null && payload != null) {
+            val isSuccess = runCatching {
+                context.contentResolver.openOutputStream(uri)?.use { output ->
+                    output.write(payload.toByteArray(Charsets.UTF_8))
+                    output.flush()
+                } != null
+            }.getOrDefault(false)
+            if (isSuccess) {
+                onTransferFileExported(uri)
+            } else {
+                onTransferMessage(transferFailedMessage)
+            }
+        }
+    }
     LaunchedEffect(isVisible) {
         if (!isVisible) {
             drawerAnimationJob?.cancelAndJoin()
@@ -419,8 +448,10 @@ fun HomeScreen(
                 if (payload == null) {
                     onTransferMessage(transferFailedMessage)
                 } else {
-                    clipboard.setText(buildAnnotatedString { append(payload) })
-                    onTransferMessage(transferExportedMessage)
+                    pendingExportPayload = payload
+                    val style = if (isLienzo) "Lienzo" else "Maple"
+                    val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+                    exportJsonLauncher.launch("${style}_$timestamp.json")
                 }
             },
         )

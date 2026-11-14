@@ -1,5 +1,7 @@
 package com.mapherdf.maplenilset.ui.main
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -12,6 +14,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -27,8 +31,11 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.mapherdf.maplenilset.const.AppRoutes
+import com.mapherdf.maplenilset.R
 import com.mapherdf.maplenilset.core.theme.SidebarBlurStyle
 import com.mapherdf.maplenilset.ui.home.HomeScreen
 import com.mapherdf.maplenilset.ui.settings.SettingsScreen
@@ -58,6 +65,9 @@ fun MainScreen(
     var colorSnackbarBarHeight by remember { mutableIntStateOf(0) }
     val colorSnackbarHostState = remember { SnackbarHostState() }
     val colorSnackbarScope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val transferExportedMessage = stringResource(R.string.page_transfer_exported)
+    val viewFileActionLabel = stringResource(R.string.page_transfer_view_file)
     val targetPage = routePage(selectedRoute)
      val pageProgress by animateFloatAsState(
         targetValue = targetPage.toFloat(),
@@ -98,6 +108,26 @@ fun MainScreen(
                             colorSnackbarHostState.showSnackbar(message)
                         }
                     },
+                    onTransferFileExported = { uri ->
+                        colorSnackbarScope.launch {
+                            val result = colorSnackbarHostState.showSnackbar(
+                                message = transferExportedMessage,
+                                actionLabel = viewFileActionLabel,
+                                duration = SnackbarDuration.Long,
+                            )
+                            if (result == SnackbarResult.ActionPerformed) {
+                                try {
+                                    context.startActivity(
+                                        Intent(Intent.ACTION_VIEW).apply {
+                                            setDataAndType(uri, "application/json")
+                                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                        },
+                                    )
+                                } catch (_: ActivityNotFoundException) {
+                                }
+                            }
+                        }
+                    },
                 )
             }
             Box(
@@ -133,9 +163,11 @@ fun MainScreen(
                 .align(Alignment.BottomCenter)
                 .padding(bottom = colorSnackbarBottomSpacing),
             snackbar = { snackbarData ->
-                LaunchedEffect(snackbarData) {
-                    delay(1_500L)
-                    snackbarData.dismiss()
+                if (snackbarData.visuals.actionLabel == null) {
+                    LaunchedEffect(snackbarData) {
+                        delay(1_500L)
+                        snackbarData.dismiss()
+                    }
                 }
                 Snackbar(snackbarData)
             },
