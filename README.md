@@ -37,7 +37,7 @@ Release 检查：
 
 ## 版本
 
-- 当前版本：`v1.1.0`
+- 当前版本：`v1.2.0`
 - 更新日志：<https://github.com/JopHus23/maple-nilset/releases>
 
 ## 源码与许可
