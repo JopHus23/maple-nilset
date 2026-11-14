@@ -295,7 +295,7 @@
     <string name="page_transfer_export_json">导出为 Json</string>
     <string name="page_transfer_import_json">从 Json 导入</string>
     <string name="page_transfer_export_json_title">选择 Json 格式</string>
-    <string name="page_transfer_export_json_message">如果不清楚具体作用，就选默认 Maple 风格。</string>
+    <string name="page_transfer_export_json_message">如不清楚具体作用，请保持默认。</string>
     <string name="page_transfer_export_json_confirm">确认导出</string>
     <string name="page_transfer_export_style_maple">Maple 风格</string>
     <string name="page_transfer_export_style_lienzo">Lienzo 风格</string>
