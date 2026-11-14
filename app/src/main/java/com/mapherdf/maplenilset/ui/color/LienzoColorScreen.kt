@@ -46,7 +46,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.res.painterResource
@@ -242,6 +242,12 @@ private fun SavedColorTile(
     onCopy: () -> Unit,
 ) {
     val rgb = ColorConverter.hexToRgb(savedColor.hex)
+    val tileColor = rgb?.let { Color(it.r, it.g, it.b) } ?: MaterialTheme.colorScheme.surfaceVariant
+    val foregroundColor = if (tileColor.luminance() > 0.5f) {
+        Color.Black
+    } else {
+        Color.White
+    }
 
     Surface(
         shape = RoundedCornerShape(8.dp),
@@ -256,24 +262,13 @@ private fun SavedColorTile(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(
-                        rgb?.let { Color(it.r, it.g, it.b) } ?: MaterialTheme.colorScheme.surfaceVariant,
-                    ),
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.58f)),
-                        ),
-                    ),
+                    .background(tileColor),
             )
             Surface(
                 onClick = onCopy,
                 shape = RoundedCornerShape(8.dp),
                 color = Color.Transparent,
-                contentColor = Color.White,
+                contentColor = foregroundColor,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(4.dp)
@@ -296,14 +291,14 @@ private fun SavedColorTile(
                 Text(
                     text = savedColor.name,
                     style = MaterialTheme.typography.labelLarge,
-                    color = Color.White,
+                    color = foregroundColor,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
                     text = savedColor.hex,
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color.White.copy(alpha = 0.84f),
+                    color = foregroundColor.copy(alpha = 0.84f),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
