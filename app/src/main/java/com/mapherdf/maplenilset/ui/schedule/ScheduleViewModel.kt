@@ -2,6 +2,7 @@ package com.mapherdf.maplenilset.ui.schedule
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mapherdf.maplenilset.core.notification.NotificationCoordinator
 import com.mapherdf.maplenilset.data.calendar.CalendarItem
 import com.mapherdf.maplenilset.data.repository.CalendarRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,6 +18,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ScheduleViewModel @Inject constructor(
     private val localCalendarRepository: CalendarRepository,
+    private val notificationCoordinator: NotificationCoordinator,
     private val clock: Clock,
 ) : ViewModel() {
 
@@ -105,6 +107,7 @@ class ScheduleViewModel @Inject constructor(
         viewModelScope.launch {
             localCalendarRepository.saveCalendar(records).fold(
                 onSuccess = {
+                    notificationCoordinator.refreshAsync()
                     val now = LocalDateTime.now(clock)
                     val selectedWeekday = draft.weekday
                     _uiState.update { state ->
@@ -145,6 +148,7 @@ class ScheduleViewModel @Inject constructor(
         viewModelScope.launch {
             localCalendarRepository.saveCalendar(records).fold(
                 onSuccess = {
+                    notificationCoordinator.refreshAsync()
                     val now = LocalDateTime.now(clock)
                     val selectedWeekday = current.selectedWeekday
                     _uiState.update { state ->

@@ -10,10 +10,13 @@ import com.mapherdf.maplenilset.core.command.CommandRegistry
 import com.mapherdf.maplenilset.core.command.NilSetCommandCenter
 import com.mapherdf.maplenilset.core.command.commands.ClearConsoleCommand
 import com.mapherdf.maplenilset.core.command.commands.ClearDataCommand
+import com.mapherdf.maplenilset.core.notification.NotificationCoordinator
 import com.mapherdf.maplenilset.data.repository.CalendarRepository
 import com.mapherdf.maplenilset.data.repository.LocalCalendarRepository
 import com.mapherdf.maplenilset.data.repository.LocalMarkdownRepository
+import com.mapherdf.maplenilset.data.repository.LocalNotificationSettingsRepository
 import com.mapherdf.maplenilset.data.repository.MarkdownRepository
+import com.mapherdf.maplenilset.data.repository.NotificationSettingsRepository
 import com.mapherdf.maplenilset.data.repository.UiSettingsRepository
 import com.mapherdf.maplenilset.data.repository.LocalUiSettingsRepository
 import dagger.Binds
@@ -68,9 +71,9 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideCommandRegistry(): CommandRegistry = CommandRegistry(
+    fun provideCommandRegistry(notificationCoordinator: NotificationCoordinator): CommandRegistry = CommandRegistry(
         commands = listOf(
-            ClearDataCommand(),
+            ClearDataCommand(onCalendarCleared = { notificationCoordinator.refresh() }),
             ClearConsoleCommand(),
         ),
         isDebug = BuildConfig.DEBUG,
@@ -103,4 +106,10 @@ abstract class RepositoryModule {
     abstract fun bindUiSettingsRepository(
         impl: LocalUiSettingsRepository,
     ): UiSettingsRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindNotificationSettingsRepository(
+        impl: LocalNotificationSettingsRepository,
+    ): NotificationSettingsRepository
 }
