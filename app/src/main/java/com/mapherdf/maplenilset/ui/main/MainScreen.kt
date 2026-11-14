@@ -93,6 +93,11 @@ fun MainScreen(
                             colorSnackbarHostState.showSnackbar(message)
                         }
                     },
+                    onTransferMessage = { message ->
+                        colorSnackbarScope.launch {
+                            colorSnackbarHostState.showSnackbar(message)
+                        }
+                    },
                 )
             }
             Box(

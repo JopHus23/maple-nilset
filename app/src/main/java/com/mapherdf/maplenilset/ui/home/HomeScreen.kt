@@ -53,6 +53,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
@@ -70,12 +71,17 @@ import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 import com.mapherdf.maplenilset.R
 import com.mapherdf.maplenilset.core.navigation.HomeDestination
+import com.mapherdf.maplenilset.data.calendar.CalendarItem
+import com.mapherdf.maplenilset.data.color.SavedColor
+import com.mapherdf.maplenilset.data.transfer.PageTransferMode
 import com.mapherdf.maplenilset.core.theme.SidebarBlurStyle
 import com.mapherdf.maplenilset.ui.settings.CustomSettingsViewModel
 import com.mapherdf.maplenilset.ui.calendar.CalendarScreen
 import com.mapherdf.maplenilset.ui.bili.BiliNilScreen
 import com.mapherdf.maplenilset.ui.schedule.ScheduleScreen
 import com.mapherdf.maplenilset.ui.color.LienzoColorScreen
+import com.mapherdf.maplenilset.ui.color.ColorViewModel
+import com.mapherdf.maplenilset.ui.schedule.ScheduleViewModel
 import com.mapherdf.maplenilset.ui.markdown.MarkdownText
 import com.mapherdf.maplenilset.ui.theme.themeContainerColor
 import com.mapherdf.maplenilset.ui.theme.themeSidebarSurfaceColor
@@ -90,6 +96,7 @@ fun HomeScreen(
     onEditColor: (String) -> Unit = {},
     onViewColor: (String) -> Unit = {},
     onColorCopy: (String) -> Unit = {},
+    onTransferMessage: (String) -> Unit = {},
 ) {
     val customViewModel: CustomSettingsViewModel = hiltViewModel()
     val uiSettings by customViewModel.uiSettings.collectAsStateWithLifecycle()
@@ -104,6 +111,23 @@ fun HomeScreen(
         ?: uiSettings.startupPage.takeIf { it in visibleDestinations }
         ?: visibleDestinations.firstOrNull()
         ?: HomeDestination.HOME
+    val scheduleViewModel = if (selectedDestination == HomeDestination.SCHEDULE) {
+        hiltViewModel<ScheduleViewModel>()
+    } else {
+        null
+    }
+    val colorViewModel = if (selectedDestination == HomeDestination.LIENZO) {
+        hiltViewModel<ColorViewModel>()
+    } else {
+        null
+    }
+    val clipboard = LocalClipboardManager.current
+    var pendingScheduleImport by remember { mutableStateOf<List<CalendarItem>?>(null) }
+    var pendingColorImport by remember { mutableStateOf<List<SavedColor>?>(null) }
+    val transferExportedMessage = stringResource(R.string.page_transfer_exported)
+    val transferInvalidMessage = stringResource(R.string.page_transfer_invalid)
+    val transferImportedMessage = stringResource(R.string.page_transfer_imported)
+    val transferFailedMessage = stringResource(R.string.page_transfer_failed)
     LaunchedEffect(isVisible) {
         if (!isVisible) {
             drawerAnimationJob?.cancelAndJoin()
@@ -219,6 +243,53 @@ fun HomeScreen(
                                 )
                             }
                         },
+                        actions = {
+                            when (selectedDestination) {
+                                HomeDestination.SCHEDULE -> HomePageTransferMenu(
+                                    onExport = {
+                                        val payload = scheduleViewModel?.exportSchedule()
+                                        if (payload == null) {
+                                            onTransferMessage(transferFailedMessage)
+                                        } else {
+                                            clipboard.setText(buildAnnotatedString { append(payload) })
+                                            onTransferMessage(transferExportedMessage)
+                                        }
+                                    },
+                                    onImport = {
+                                        val payload = scheduleViewModel?.parseScheduleTransfer(
+                                            clipboard.getText()?.text.orEmpty(),
+                                        )
+                                        if (payload == null) {
+                                            onTransferMessage(transferInvalidMessage)
+                                        } else {
+                                            pendingScheduleImport = payload
+                                        }
+                                    },
+                                )
+                                HomeDestination.LIENZO -> HomePageTransferMenu(
+                                    onExport = {
+                                        val payload = colorViewModel?.exportColors()
+                                        if (payload == null) {
+                                            onTransferMessage(transferFailedMessage)
+                                        } else {
+                                            clipboard.setText(buildAnnotatedString { append(payload) })
+                                            onTransferMessage(transferExportedMessage)
+                                        }
+                                    },
+                                    onImport = {
+                                        val payload = colorViewModel?.parseColorTransfer(
+                                            clipboard.getText()?.text.orEmpty(),
+                                        )
+                                        if (payload == null) {
+                                            onTransferMessage(transferInvalidMessage)
+                                        } else {
+                                            pendingColorImport = payload
+                                        }
+                                    },
+                                )
+                                else -> Unit
+                            }
+                        },
                     )
                 },
             ) { innerPadding ->
@@ -262,6 +333,30 @@ fun HomeScreen(
                 )
             }
         }
+    }
+
+    pendingScheduleImport?.let { records ->
+        HomePageImportDialog(
+            onDismiss = { pendingScheduleImport = null },
+            onConfirm = { mode ->
+                pendingScheduleImport = null
+                scheduleViewModel?.importSchedule(records, mode) { isSuccess ->
+                    onTransferMessage(if (isSuccess) transferImportedMessage else transferFailedMessage)
+                }
+            },
+        )
+    }
+
+    pendingColorImport?.let { colors ->
+        HomePageImportDialog(
+            onDismiss = { pendingColorImport = null },
+            onConfirm = { mode ->
+                pendingColorImport = null
+                colorViewModel?.importColors(colors, mode) { isSuccess ->
+                    onTransferMessage(if (isSuccess) transferImportedMessage else transferFailedMessage)
+                }
+            },
+        )
     }
 }
 

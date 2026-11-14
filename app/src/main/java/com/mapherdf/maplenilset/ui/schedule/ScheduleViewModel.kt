@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.mapherdf.maplenilset.core.notification.NotificationCoordinator
 import com.mapherdf.maplenilset.data.calendar.CalendarItem
 import com.mapherdf.maplenilset.data.repository.CalendarRepository
+import com.mapherdf.maplenilset.data.transfer.PageTransferMode
+import com.mapherdf.maplenilset.data.transfer.SchedulePageTransferCodec
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import java.time.LocalDateTime
@@ -179,6 +181,70 @@ class ScheduleViewModel @Inject constructor(
 
     fun refresh() {
         viewModelScope.launch { loadCalendar(refreshing = true) }
+    }
+
+    fun exportSchedule(): String? = runCatching {
+        SchedulePageTransferCodec.encode(_uiState.value.records)
+    }.getOrNull()
+
+    fun parseScheduleTransfer(text: String): List<CalendarItem>? = runCatching {
+        SchedulePageTransferCodec.decode(text)
+    }.getOrNull()
+
+    fun importSchedule(
+        records: List<CalendarItem>,
+        mode: PageTransferMode,
+        onResult: (Boolean) -> Unit,
+    ) {
+        val current = _uiState.value
+        if (current.isSavingCourse) {
+            onResult(false)
+            return
+        }
+
+        _uiState.update { it.copy(isSavingCourse = true) }
+        viewModelScope.launch {
+            val mergedRecords = runCatching {
+                if (mode == PageTransferMode.OVERWRITE) {
+                    records
+                } else {
+                    val existingRecords = localCalendarRepository.getCalendar().getOrThrow().records
+                    existingRecords + records.filterNot(existingRecords::contains)
+                }
+            }.getOrNull()
+
+            if (mergedRecords == null) {
+                _uiState.update { it.copy(isSavingCourse = false) }
+                onResult(false)
+                return@launch
+            }
+
+            localCalendarRepository.saveCalendar(mergedRecords).fold(
+                onSuccess = {
+                    notificationCoordinator.refreshAsync()
+                    val now = LocalDateTime.now(clock)
+                    val selectedWeekday = current.selectedWeekday
+                    _uiState.update { state ->
+                        state.copy(
+                            isSavingCourse = false,
+                            records = mergedRecords,
+                            selectedCourses = ScheduleCourseSelector.coursesFor(mergedRecords, selectedWeekday),
+                            nextCourse = ScheduleCourseSelector.nextCourse(
+                                mergedRecords,
+                                now.toLocalDate(),
+                                toMinute(now),
+                            ),
+                            greetingHour = now.hour,
+                        )
+                    }
+                    onResult(true)
+                },
+                onFailure = {
+                    _uiState.update { state -> state.copy(isSavingCourse = false) }
+                    onResult(false)
+                },
+            )
+        }
     }
 
     private suspend fun loadCalendar(refreshing: Boolean = false) {

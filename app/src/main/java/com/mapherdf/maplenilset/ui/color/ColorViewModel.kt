@@ -13,9 +13,12 @@ import com.mapherdf.maplenilset.data.color.NcsColor
 import com.mapherdf.maplenilset.data.color.RgbColor
 import com.mapherdf.maplenilset.data.color.SavedColor
 import com.mapherdf.maplenilset.data.repository.ColorRepository
+import com.mapherdf.maplenilset.data.transfer.ColorPageTransferCodec
+import com.mapherdf.maplenilset.data.transfer.PageTransferMode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.UUID
 import javax.inject.Inject
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -216,6 +219,53 @@ class ColorViewModel @Inject constructor(
             colorRepository.removeColor(colorId)
         }
     }
+
+    fun exportColors(): String? = runCatching {
+        ColorPageTransferCodec.encode(savedColors.value)
+    }.getOrNull()
+
+    fun parseColorTransfer(text: String): List<SavedColor>? = runCatching {
+        ColorPageTransferCodec.decode(text)
+    }.getOrNull()
+
+    fun importColors(
+        colors: List<SavedColor>,
+        mode: PageTransferMode,
+        onResult: (Boolean) -> Unit,
+    ) {
+        if (_isSavingColor.value) {
+            onResult(false)
+            return
+        }
+        _isSavingColor.value = true
+        viewModelScope.launch {
+            runCatching {
+                val current = if (mode == PageTransferMode.OVERWRITE) {
+                    emptyList()
+                } else {
+                    colorRepository.savedColors.first()
+                }
+                val existingIds = current.mapTo(mutableSetOf()) { it.id }
+                val existingDetails = current.mapTo(mutableSetOf()) { it.transferIdentity }
+                val addedColors = mutableListOf<SavedColor>()
+                colors.forEach { color ->
+                    if (color.id in existingIds || color.transferIdentity in existingDetails) return@forEach
+                    existingIds.add(color.id)
+                    existingDetails.add(color.transferIdentity)
+                    addedColors.add(color)
+                }
+                colorRepository.saveColors(current + addedColors)
+            }.onSuccess {
+                onResult(true)
+            }.onFailure {
+                onResult(false)
+            }
+            _isSavingColor.value = false
+        }
+    }
+
+    private val SavedColor.transferIdentity: String
+        get() = listOf(name, hex, sourceType, sourceValue.orEmpty()).joinToString("\u0000")
 
     private fun parseRgb(input: String): RgbColor? {
         val numbers = extractNumbers(input)

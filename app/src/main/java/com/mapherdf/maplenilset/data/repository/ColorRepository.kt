@@ -21,6 +21,8 @@ interface ColorRepository {
 
     suspend fun updateColor(color: SavedColor)
 
+    suspend fun saveColors(colors: List<SavedColor>)
+
     suspend fun removeColor(colorId: String)
 }
 
@@ -69,6 +71,12 @@ class LocalColorRepository @Inject constructor(
             } ?: emptyList()
             val updated = current.filterNot { it.id == colorId }
             preferences[key] = json.encodeToString(ListSerializer(SavedColor.serializer()), updated)
+        }
+    }
+
+    override suspend fun saveColors(colors: List<SavedColor>) {
+        dataStore.edit { preferences ->
+            preferences[key] = json.encodeToString(ListSerializer(SavedColor.serializer()), colors)
         }
     }
 }

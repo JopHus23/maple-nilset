@@ -279,4 +279,16 @@
     <string name="calendar_empty">日历待补充</string>
     <string name="back">返回</string>
     <string name="btn_send">发送</string>
+    <string name="page_transfer_more">更多操作</string>
+    <string name="page_transfer_export">导出到剪贴板</string>
+    <string name="page_transfer_import">从剪贴板导入</string>
+    <string name="page_transfer_exported">已导出到剪贴板</string>
+    <string name="page_transfer_invalid">剪贴板内容无效</string>
+    <string name="page_transfer_import_title">选择导入方式</string>
+    <string name="page_transfer_import_message">覆盖导入会替换当前数据；添加导入会保留当前数据并追加新数据。</string>
+    <string name="page_transfer_overwrite">覆盖导入</string>
+    <string name="page_transfer_merge">添加导入</string>
+    <string name="page_transfer_confirm">确认导入</string>
+    <string name="page_transfer_imported">导入成功</string>
+    <string name="page_transfer_failed">导入失败，请重试</string>
 </resources>
