@@ -137,6 +137,7 @@ fun HomeScreen(
     var pendingExportPayload by rememberSaveable { mutableStateOf<String?>(null) }
     val transferExportedMessage = stringResource(R.string.page_transfer_exported)
     val transferInvalidMessage = stringResource(R.string.page_transfer_invalid)
+    val transferImportJsonInvalidMessage = stringResource(R.string.page_transfer_import_json_invalid)
     val transferImportedMessage = stringResource(R.string.page_transfer_imported)
     val transferFailedMessage = stringResource(R.string.page_transfer_failed)
     val context = LocalContext.current
@@ -156,6 +157,23 @@ fun HomeScreen(
                 onTransferFileExported(uri)
             } else {
                 onTransferMessage(transferFailedMessage)
+            }
+        }
+    }
+    val importJsonLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument(),
+    ) { uri ->
+        if (uri != null) {
+            val text = runCatching {
+                context.contentResolver.openInputStream(uri)?.use { input ->
+                    input.readBytes().toString(Charsets.UTF_8)
+                }
+            }.getOrNull()
+            val payload = text?.let { colorViewModel?.parseColorTransferAuto(it) }
+            if (payload == null) {
+                onTransferMessage(transferImportJsonInvalidMessage)
+            } else {
+                pendingColorImport = payload
             }
         }
     }
@@ -337,7 +355,7 @@ fun HomeScreen(
                                             }
                                         },
                                         onImport = {
-                                            val payload = colorViewModel?.parseColorTransfer(
+                                            val payload = colorViewModel?.parseColorTransferAuto(
                                                 clipboard.getText()?.text.orEmpty(),
                                             )
                                             if (payload == null) {
@@ -349,14 +367,13 @@ fun HomeScreen(
                                         showJsonActions = true,
                                         onExportJson = { showExportJsonDialog = true },
                                         onImportJson = {
-                                            val payload = colorViewModel?.parseColorTransferAuto(
-                                                clipboard.getText()?.text.orEmpty(),
+                                            importJsonLauncher.launch(
+                                                arrayOf(
+                                                    "application/json",
+                                                    "application/octet-stream",
+                                                    "text/plain",
+                                                ),
                                             )
-                                            if (payload == null) {
-                                                onTransferMessage(transferInvalidMessage)
-                                            } else {
-                                                pendingColorImport = payload
-                                            }
                                         },
                                     )
                                 }

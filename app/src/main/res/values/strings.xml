@@ -284,6 +284,7 @@
     <string name="page_transfer_export">导出到剪贴板</string>
     <string name="page_transfer_import">从剪贴板导入</string>
     <string name="page_transfer_exported">已导出到剪贴板</string>
+    <string name="page_transfer_export_file_done">已成功导出，点击跳转</string>
     <string name="page_transfer_invalid">剪贴板内容无效</string>
     <string name="page_transfer_import_title">选择导入方式</string>
     <string name="page_transfer_import_message">覆盖导入会替换当前数据；添加导入会保留当前数据并追加新数据。</string>
@@ -291,13 +292,14 @@
     <string name="page_transfer_merge">添加导入</string>
     <string name="page_transfer_confirm">确认导入</string>
     <string name="page_transfer_imported">导入成功</string>
-    <string name="page_transfer_failed">导入失败，请重试</string>
+    <string name="page_transfer_failed">操作失败，请重试</string>
     <string name="page_transfer_export_json">导出为 Json</string>
     <string name="page_transfer_import_json">从 Json 导入</string>
     <string name="page_transfer_export_json_title">选择 Json 格式</string>
     <string name="page_transfer_export_json_message">如不清楚具体作用，请保持默认。</string>
     <string name="page_transfer_export_json_confirm">确认导出</string>
     <string name="page_transfer_view_file">查看文件</string>
+    <string name="page_transfer_import_json_invalid">无效的 Json 文件</string>
     <string name="page_transfer_export_style_maple">Maple 风格</string>
     <string name="page_transfer_export_style_lienzo">Lienzo 风格</string>
     <string name="lienzo_color_view_list">当前为列表视图，点击切换为平铺视图</string>

@@ -67,6 +67,7 @@ fun MainScreen(
     val colorSnackbarScope = rememberCoroutineScope()
     val context = LocalContext.current
     val transferExportedMessage = stringResource(R.string.page_transfer_exported)
+    val exportFileDoneMessage = stringResource(R.string.page_transfer_export_file_done)
     val viewFileActionLabel = stringResource(R.string.page_transfer_view_file)
     val targetPage = routePage(selectedRoute)
      val pageProgress by animateFloatAsState(
@@ -111,7 +112,7 @@ fun MainScreen(
                     onTransferFileExported = { uri ->
                         colorSnackbarScope.launch {
                             val result = colorSnackbarHostState.showSnackbar(
-                                message = transferExportedMessage,
+                                message = exportFileDoneMessage,
                                 actionLabel = viewFileActionLabel,
                                 duration = SnackbarDuration.Long,
                             )
