@@ -79,6 +79,7 @@ import com.mapherdf.maplenilset.data.color.RgbColor
 import com.mapherdf.maplenilset.data.color.SavedColor
 import com.mapherdf.maplenilset.core.navigation.LienzoColorView
 import com.mapherdf.maplenilset.core.navigation.targetLienzoColorGridColumns
+import com.mapherdf.maplenilset.core.navigation.MAX_LIENZO_COLOR_GRID_COLUMNS
 import com.mapherdf.maplenilset.ui.theme.themeContainerBorderColor
 import com.mapherdf.maplenilset.ui.theme.themeContainerColor
 
@@ -176,6 +177,7 @@ fun LienzoColorScreen(
                     Box(modifier = Modifier.animateItem()) {
                         SavedColorTile(
                             savedColor = savedColor,
+                            showLabels = animatedGridColumns < MAX_LIENZO_COLOR_GRID_COLUMNS,
                             isActionMenuVisible = selectedColorId == savedColor.id,
                             onClick = {
                                 selectedColorId = null
@@ -275,20 +277,31 @@ private fun Modifier.pinchGridColumns(
         awaitFirstDown(requireUnconsumed = false)
 
         var pinchLocked = false
+        var accumulatedZoom = 1f
+        var startingColumns = 0
         do {
             val event = awaitPointerEvent(PointerEventPass.Initial)
             val pressedChanges = event.changes.filter { it.pressed }
 
             if (pressedChanges.size >= 2) {
-                val zoom = event.calculateZoom()
-                if (abs(zoom - 1f) > 0.015f) {
-                    pinchLocked = true
-                    onTargetColumns(targetLienzoColorGridColumns(currentColumns(), zoom))
+                if (startingColumns == 0) {
+                    startingColumns = currentColumns()
                 }
-            }
-
-            if (pinchLocked) {
-                event.changes.forEach { change -> change.consume() }
+                val zoom = event.calculateZoom()
+                if (zoom.isFinite()) {
+                    accumulatedZoom *= zoom
+                }
+                if (!pinchLocked && abs(accumulatedZoom - 1f) > 0.015f) {
+                    pinchLocked = true
+                }
+                if (pinchLocked) {
+                    onTargetColumns(targetLienzoColorGridColumns(startingColumns, accumulatedZoom))
+                    event.changes.forEach { change -> change.consume() }
+                }
+            } else if (startingColumns != 0) {
+                accumulatedZoom = 1f
+                startingColumns = 0
+                pinchLocked = false
             }
 
             if (event.changes.none { it.pressed }) {
@@ -302,6 +315,7 @@ private fun Modifier.pinchGridColumns(
 @Composable
 private fun SavedColorTile(
     savedColor: SavedColor,
+    showLabels: Boolean,
     isActionMenuVisible: Boolean,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
@@ -339,7 +353,7 @@ private fun SavedColorTile(
                 color = Color.Transparent,
                 contentColor = foregroundColor,
                 modifier = Modifier
-                    .align(Alignment.TopEnd)
+                    .align(if (showLabels) Alignment.TopEnd else Alignment.Center)
                     .padding(4.dp)
                     .size(34.dp),
             ) {
@@ -351,26 +365,28 @@ private fun SavedColorTile(
                     )
                 }
             }
-            Column(
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .fillMaxWidth()
-                    .padding(horizontal = 10.dp, vertical = 8.dp),
-            ) {
-                Text(
-                    text = savedColor.name,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = foregroundColor,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Text(
-                    text = savedColor.hex,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = foregroundColor.copy(alpha = 0.84f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+            if (showLabels) {
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .fillMaxWidth()
+                        .padding(horizontal = 10.dp, vertical = 8.dp),
+                ) {
+                    Text(
+                        text = savedColor.name,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = foregroundColor,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = savedColor.hex,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = foregroundColor.copy(alpha = 0.84f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
         }
 

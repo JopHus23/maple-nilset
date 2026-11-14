@@ -36,7 +36,7 @@ data class UserUiSettings(
         get() = pageOrder.filterNot { it in hiddenPages }
 }
 
-const val MIN_LIENZO_COLOR_GRID_COLUMNS = 2
+const val MIN_LIENZO_COLOR_GRID_COLUMNS = 1
 const val MAX_LIENZO_COLOR_GRID_COLUMNS = 6
 const val DEFAULT_LIENZO_COLOR_GRID_COLUMNS = 2
 
